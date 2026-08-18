@@ -4,10 +4,20 @@ on:
   push:
     paths:
       - 'gigiloop/**'
+      - 'adapters/**'
+      - '.cursor/rules/gigiloop.mdc'
+      - 'COMPATIBILITY.md'
+      - 'assets/logo-v2.svg'
+      - 'assets/banner-v2.svg'
       - '.github/workflows/validate-skill.yml'
   pull_request:
     paths:
       - 'gigiloop/**'
+      - 'adapters/**'
+      - '.cursor/rules/gigiloop.mdc'
+      - 'COMPATIBILITY.md'
+      - 'assets/logo-v2.svg'
+      - 'assets/banner-v2.svg'
       - '.github/workflows/validate-skill.yml'
 
 jobs:
@@ -18,12 +28,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate SKILL.md frontmatter and references
+      - name: Validate SKILL.md, references, adapters, and branding
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          import sys
 
           skill = Path('gigiloop/SKILL.md')
           text = skill.read_text(encoding='utf-8')
@@ -37,10 +46,32 @@ jobs:
               raise SystemExit('Expected name: gigiloop')
           if not re.search(r'^description:\s+.+$', fm, re.M):
               raise SystemExit('Missing description')
+
+          required = [
+              'gigiloop/references/scoring.md',
+              'gigiloop/references/checkpoint.md',
+              'gigiloop/references/verification.md',
+              'gigiloop/references/hosts.md',
+              'gigiloop/agents/openai.yaml',
+              'COMPATIBILITY.md',
+              'adapters/codex/AGENTS.md',
+              'adapters/gemini-cli/GEMINI.md',
+              '.cursor/rules/gigiloop.mdc',
+              'assets/logo-v2.svg',
+              'assets/banner-v2.svg',
+          ]
+          for item in required:
+              if not Path(item).exists():
+                  raise SystemExit(f'Missing required file: {item}')
+
           for ref in ['references/scoring.md', 'references/checkpoint.md', 'references/verification.md']:
               if ref not in text:
                   raise SystemExit(f'SKILL.md does not reference {ref}')
-              if not (Path('gigiloop') / ref).exists():
-                  raise SystemExit(f'Missing {ref}')
-          print('GigiLoop skill validation passed')
+
+          for svg in ['assets/logo-v2.svg', 'assets/banner-v2.svg']:
+              data = Path(svg).read_text(encoding='utf-8')
+              if '<svg' not in data or '</svg>' not in data:
+                  raise SystemExit(f'Invalid SVG asset: {svg}')
+
+          print('GigiLoop multihost validation passed')
           PY
