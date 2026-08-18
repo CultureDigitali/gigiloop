@@ -1,49 +1,63 @@
-# Host portability
+# Host portability rules
 
-Use the canonical GigiLoop protocol independently of the coding-agent host.
+Keep GigiLoop's correctness contract stable across agent hosts. Treat host-specific features as accelerators, not requirements.
 
-## Core rule
+## Capability discovery
 
-Treat host-specific features as optional accelerators. Never make correctness depend on a feature that only one host provides.
+At intake, determine whether the host provides:
 
-Preserve these invariants everywhere:
+- native Agent Skills discovery;
+- subagents or fresh-context reviewers;
+- persistent task/todo state;
+- shell and repository tools;
+- hooks or deterministic command execution;
+- worktrees, branches, or isolated sandboxes;
+- resumable session state.
 
-1. establish repository baseline before edits;
-2. define measurable acceptance criteria;
-3. verify each iteration with proportionate checks;
-4. score from evidence only;
-5. adversarially review the current diff;
-6. reconcile scores after critique;
-7. detect plateaus and change strategy;
-8. checkpoint enough state to resume safely;
-9. run a final verification gate before success.
+Record unavailable capabilities only when they affect the selected profile or evidence ceiling.
 
-## Capability adaptation
+## Fallback matrix
 
-### Independent reviewer / subagent available
+| Capability | Preferred use | Fallback |
+|---|---|---|
+| Fresh-context reviewer | independent red-team and T5 evidence | separate hostile review pass in current agent; cap confidence appropriately |
+| Persistent task state | mirror iteration and next action | use `.gigiloop/checkpoint.md` as authoritative state |
+| Hooks | deterministic baseline/final checks | run the commands explicitly and record results |
+| Worktree/sandbox | isolate loop changes from user work | use a branch or narrowly scoped edits; preserve and re-check local changes |
+| Native skill loading | install canonical `gigiloop/SKILL.md` | use a documented adapter such as `AGENTS.md`, `GEMINI.md`, or Cursor `.mdc` |
+| Long-running session | continuous loop | checkpoint after every iteration and resume only after stale-state reconciliation |
 
-Prefer a fresh-context reviewer with read-only access to the relevant diff when the host supports it. Feed the reviewer the acceptance criteria, baseline facts, current diff, and verification evidence. Do not feed it the builder's self-justification unless necessary.
+## Profile portability
 
-### No independent reviewer
+Preserve the meaning of profiles across hosts:
 
-Run a distinct adversarial pass in the current agent. Re-open the diff and evidence as if reviewing another contributor. Findings still require evidence or a concrete verification path.
+- **strict:** do not claim full strict completion when required integration checks or independent review are unavailable; report the evidence ceiling or blocker.
+- **balanced:** use targeted checks, milestone checks, reconciliation, and a full relevant final gate.
+- **fast:** honor the explicit budget but retain baseline, integrity, reconciliation, and honest-exit rules.
 
-### Todo / task state available
+Never silently downgrade a profile because the host lacks a feature.
 
-Mirror the next action and important blockers into the host task mechanism, but keep `.gigiloop/checkpoint.md` authoritative when the repository is writable.
+## State authority
 
-### No persistent task mechanism
+Use the host's task list, plan, or todo system when helpful, but treat `.gigiloop/checkpoint.md` as the canonical resumable state. Host UI state may disappear or drift.
 
-Use the checkpoint only. Keep it compact and sufficient to recover goal, rubric, baseline, current evidence, unresolved findings, iteration count, and next action.
+## Tool truthfulness
 
-### Hooks / workflows available
+Do not claim a command, test, review, or inspection ran merely because the host normally supports it. Record only actual tool results.
 
-Use hooks or host workflows to automate deterministic verification where useful, but do not hide required evidence behind an opaque automation. Record the command or result that justifies each pass.
+When a host cannot execute a required check:
 
-### Host cannot write the repository
+1. record the missing capability;
+2. run the strongest available substitute;
+3. lower the evidence tier when appropriate;
+4. report the limitation in the final status.
 
-Run analysis and verification where possible, then report the exact edit or command required. Do not claim completion if the requested modification could not be applied.
+## Included adapters
 
-## Installation ecosystem
+- OpenCode / native Agent Skills: `gigiloop/SKILL.md`
+- Claude Code / native Agent Skills: `gigiloop/SKILL.md`
+- Codex convenience wrapper: `adapters/codex/AGENTS.md`
+- Cursor convenience rule: `.cursor/rules/gigiloop.mdc`
+- Gemini CLI convenience wrapper: `adapters/gemini-cli/GEMINI.md`
 
-GigiLoop follows the Agent Skills `SKILL.md` convention. The `skills` CLI can install the canonical skill to supported hosts. Repository-level adapters outside the skill package are convenience wrappers and must not diverge from this reference.
+Adapters must remain short and refer back to the canonical skill so behavior does not drift.
