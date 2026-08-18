@@ -1,0 +1,48 @@
+name: Probe approved visual blobs
+
+on:
+  push:
+    branches:
+      - polish/approved-visuals-v0.3.1
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect JPEG assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum .probe/*.jpg
+          wc -c .probe/*.jpg
+          file .probe/*.jpg
+          python - <<'PY'
+          from pathlib import Path
+          from struct import unpack
+
+          def jpeg_size(path: Path):
+              data = path.read_bytes()
+              if data[:2] != b'\xff\xd8':
+                  raise SystemExit(f'{path}: not a JPEG')
+              i = 2
+              while i < len(data):
+                  if data[i] != 0xFF:
+                      i += 1
+                      continue
+                  while i < len(data) and data[i] == 0xFF:
+                      i += 1
+                  marker = data[i]
+                  i += 1
+                  if marker in (0xD8, 0xD9):
+                      continue
+                  length = unpack('>H', data[i:i+2])[0]
+                  if marker in range(0xC0, 0xC4):
+                      height, width = unpack('>HH', data[i+3:i+7])
+                      return width, height
+                  i += length
+              raise SystemExit(f'{path}: dimensions not found')
+
+          for path in sorted(Path('.probe').glob('*.jpg')):
+              print(path, jpeg_size(path))
+          PY
