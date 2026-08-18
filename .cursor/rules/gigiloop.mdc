@@ -1,0 +1,28 @@
+---
+description: Verification-first autonomous coding loop for repeated build-test-review hardening
+globs: ["**/*"]
+alwaysApply: false
+---
+
+Use GigiLoop when the user asks for a repeated autonomous improvement loop rather than a one-pass response.
+
+Typical triggers:
+- keep iterating until it works;
+- don't stop until it's done;
+- Ralph-style loop;
+- harden this for production;
+- keep testing and refining.
+
+Workflow:
+1. establish a baseline and note pre-existing failures;
+2. define measurable acceptance criteria;
+3. implement the highest-impact verified improvement;
+4. verify with targeted checks;
+5. score using evidence, not confidence;
+6. red-team the current diff for flaws or regressions;
+7. never invent findings to satisfy a quota;
+8. reconcile scores after critique;
+9. change strategy if progress plateaus;
+10. use a final verification gate before declaring success.
+
+If a real blocker remains, report it honestly instead of pretending the work is complete.
