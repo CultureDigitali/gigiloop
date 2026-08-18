@@ -52,7 +52,7 @@ Compatibility is descriptive; it does not imply endorsement or partnership. Wher
 - [Cursor brand assets](https://cursor.com/brand)
 - [Google Brand Resource Center](https://about.google/brand-resource-center/)
 
-See [`assets/BRANDING.md`](assets/BRANDING.md). GigiLoop’s own mark is [`assets/logo-v2.svg`](assets/logo-v2.svg).
+See [`assets/BRANDING.md`](assets/BRANDING.md) and [`assets/host-logos/README.md`](assets/host-logos/README.md). GigiLoop’s own mark is [`assets/logo-v2.svg`](assets/logo-v2.svg).
 
 ---
 
@@ -198,15 +198,7 @@ See [`gigiloop/references/scoring.md`](gigiloop/references/scoring.md).
 
 ## Resumable without trusting stale state
 
-When the project is writable, GigiLoop uses `.gigiloop/checkpoint.md` to track:
-
-- goal, scope, constraints, and budget;
-- branch, HEAD, and repository state;
-- baseline verification and pre-existing failures;
-- rubric and evidence tiers;
-- current scores and evidence;
-- confirmed findings and unresolved hypotheses;
-- iteration count and next action.
+When the project is writable, GigiLoop uses `.gigiloop/checkpoint.md` to track goal, scope, constraints, repository state, baseline failures, rubric, current evidence, findings, iteration count, and next action.
 
 If the repository changes outside the loop, affected evidence is invalidated before resuming. See [`gigiloop/references/checkpoint.md`](gigiloop/references/checkpoint.md).
 
@@ -222,13 +214,7 @@ See [`gigiloop/references/hosts.md`](gigiloop/references/hosts.md) and [`COMPATI
 
 ## Benchmarks: prove it, do not market fiction
 
-GigiLoop does **not** publish invented success rates. [`benchmarks/README.md`](benchmarks/README.md) defines a reproducible comparison protocol for:
-
-- a normal one-pass coding agent;
-- a naive keep-going / Ralph-style loop;
-- GigiLoop;
-
-from the same starting commit, with comparable model/host budgets and independent or hidden checks where practical.
+GigiLoop does **not** publish invented success rates. [`benchmarks/README.md`](benchmarks/README.md) defines a reproducible comparison protocol for a normal one-pass coding agent, a naive keep-going / Ralph-style loop, and GigiLoop from the same starting commit with comparable model/host budgets and independent or hidden checks where practical.
 
 Measured claims belong in the README only after raw evidence can reconstruct them.
 
@@ -261,12 +247,14 @@ Measured claims belong in the README only after raw evidence can reconstruct the
 │   ├── logo-v2.svg
 │   ├── banner-v2.svg
 │   ├── loop.svg
-│   └── BRANDING.md
+│   ├── BRANDING.md
+│   └── host-logos/README.md
 ├── adapters/
 │   ├── codex/AGENTS.md
 │   └── gemini-cli/GEMINI.md
 ├── .cursor/rules/gigiloop.mdc
 ├── benchmarks/README.md
+├── marketing/
 └── gigiloop/
     ├── SKILL.md
     ├── agents/openai.yaml
@@ -284,6 +272,14 @@ Measured claims belong in the README only after raw evidence can reconstruct the
 Reproducible benchmark cases, failure reports, portability fixes, host adapters, and reviewer strategies are especially useful. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 If GigiLoop catches something a normal coding pass would have shipped, open a benchmark case with the evidence.
+
+---
+
+## 📣 Share
+
+Ready-to-post launch drafts for free developer channels live in [`marketing/`](marketing/), including Show HN, Reddit, X, LinkedIn, Product Hunt, Lobsters, and the self-case-study.
+
+Discussion: [github.com/CultureDigitali/gigiloop/discussions](https://github.com/CultureDigitali/gigiloop/discussions)
 
 ---
 
