@@ -1,68 +1,102 @@
 # Canonical GigiLoop checkpoint
 
-Store the project checkpoint at `.gigiloop/checkpoint.md` when writable. Keep it concise enough to re-read at every resumed turn.
+Use `.gigiloop/checkpoint.md` as the authoritative resumable state when the project is writable.
+Keep it compact, current, and sufficient for a fresh agent to resume without relying on conversation memory.
 
-Recommended shape:
+## Template
 
 ```yaml
-loop_id: <stable id>
-status: active | success | blocked | budget-exhausted | stopped
-iteration: 0
+loop_id: unique-id
+status: active | success | blocked | budget_exhausted | stopped
+iteration: 1
+profile: balanced              # strict | balanced | fast
 
- goal: <one sentence>
- scope:
-   include: []
-   exclude: []
- constraints: []
- budget:
-   max_iterations: 25
-   other: null
+goal: one-sentence goal
+scope:
+  included: []
+  excluded: []
+constraints: []
+budget:
+  max_iterations: 25
+  wall_clock: null
+  cost_or_token_limit: null
 
 repository:
-  branch: <branch or unknown>
-  head_sha: <sha or unknown>
-  dirty_before: <true|false|unknown>
-  diff_fingerprint: <hash/summary or unknown>
+  branch: null
+  head_sha: null
+  dirty_before: null
+  current_dirty_state: null
+  diff_fingerprint: null
+  protected_local_changes: []
+  repository_instructions_read: []
 
-verification:
-  baseline_run: []
-  baseline_failures: []
-  commands:
-    test: null
-    lint: null
-    typecheck: null
-    build: null
-  last_results: []
+verification_contract:
+  tests: []
+  thresholds: []
+  snapshots_or_golden_files: []
+  static_checks: []
+  manual_acceptance: []
+  approved_exceptions: []
+
+baseline:
+  commands: []
+  pre_existing_failures: []
+  unavailable_checks: []
 
 rubric:
   - name: Correctness
     weight: 40
+    pass_definition: null
+    critical_failure: null
+    max_evidence_tier: T4
     score: 0
-    tier: T0
     evidence: []
     uncertainty: null
+
+current_evidence:
+  - id: evidence-1
+    iteration: 1
+    code_state: null            # HEAD / diff fingerprint
+    method: null                # command, manual check, code inspection
+    scope: null
+    result: null
+    exit_status: null
+    evidence_tier: T0
+    freshness: current          # current | stale | invalidated
 
 findings:
   confirmed: []
   falsified: []
   hypotheses: []
 
+integrity:
+  verifier_changes: []
+  protected_work_conflicts: []
+  destructive_operations: []
+  integrity_blockers: []
+
 progress:
-  previous_total: null
+  previous_scores: {}
+  score_delta: null
   flat_iterations: 0
   last_material_change: null
 
-next_action: <single highest-impact next step>
+next_action: null
+last_updated: null
 ```
 
-## Resume protocol
+## Freshness rules
 
-Before trusting saved evidence:
+At the start of every resumed turn:
 
-1. Compare current branch and HEAD with the checkpoint.
-2. Inspect whether the working diff changed outside the loop.
-3. Mark evidence tied to changed code as stale.
-4. Re-run the cheapest checks needed to restore confidence.
-5. Resume from `next_action` only after stale-state reconciliation.
+1. compare branch, HEAD, dirty state, and diff fingerprint;
+2. compare protected local changes and verification contract;
+3. mark evidence stale when relevant code or test configuration changed;
+4. re-run the smallest sufficient checks before reusing stale scores;
+5. resume from `next_action` only after reconciliation.
 
-Do not treat the checkpoint as proof. It is an index of proof that may need revalidation.
+## Write rules
+
+Rewrite the checkpoint at the end of every iteration and immediately before an intentional stop, user handoff, risky authorized operation, or final report.
+
+Do not store secrets, access tokens, personal data, or large raw logs. Store concise references and results.
