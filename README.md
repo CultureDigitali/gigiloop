@@ -1,122 +1,229 @@
-# ⚡ GigiLoop — The Autonomous Skill That Doesn't Quit Until It Earns Its Own 9/10
+# ⚡ GigiLoop — Verification-First Autonomous Coding
 
 ![GigiLoop banner](assets/banner.svg)
 
-> **Stop babysitting your agent. Set the bar at 9/10, walk away, and come back to work that scored itself, roasted itself, and refused to ship until it was actually good.**
+> **Build → test → red-team → reconcile → verify → repeat. GigiLoop keeps working until your acceptance criteria are backed by evidence, not agent confidence.**
 
-GigiLoop is a **self-adversarial work–test–critique loop** for [opencode](https://opencode.ai). It's the modern, evidence-obsessed successor to `/goal` and `/ralphloop`. You give it a goal. It becomes both the **Builder** and its own ruthless **Adversary**, grinds for minutes or hours, and does not stop until every rubric criterion hits **≥ 9/10** — with receipts.
+GigiLoop is an autonomous coding skill for OpenCode and compatible agent-skill hosts. It is designed for the moment when "keep trying until it works" is not enough: it establishes a baseline, defines measurable acceptance criteria, iterates on the highest-impact issue, adversarially reviews its own diff, reconciles scores after critique, and only ships after a final verification gate.
 
-No vibes. No "looks good to me." No shipping broken code because the linter was green. **Proof or it didn't happen.**
+**Think Ralph Loop, but with a hostile reviewer and an evidence gate.**
+
+No vibes. No "looks good to me." **Proof or it does not pass.**
 
 ---
 
-## 🔥 Why GigiLoop eats other "loop" skills for breakfast
+## Why GigiLoop exists
 
-Most "just keep improving" prompts are self-praise machines that loop forever and call it done when the output *feels* okay. GigiLoop is engineered against every one of those failure modes:
+Naive autonomous loops have predictable failure modes. GigiLoop is built to counter them directly:
 
-| Naive loop skill | GigiLoop |
+| Naive autonomous loop | GigiLoop |
 |---|---|
-| "Rate yourself 0–10 and keep going" | **Evidence-gated scoring** — every score cites a `file:line`, test, or command output. No proof, no score. |
-| Loops forever on a plateau | **Plateau → re-strategy.** 3 flat iterations force a real approach change, not mindless churn. |
-| Hopes the context window survives | **Compaction-survivable.** A checkpoint is its only memory; it resumes mid-loop after compaction or a restart. |
-| Averages a strong criterion over a weak one | **All-criteria gate.** The loop ends only when *every* criterion is ≥ 9. No gaming. |
-| Stops at the first green test | **Final Gate.** One full diff-bounded verification pass before it declares victory. |
-| Flatters itself into a 10 | **Adversary stance** with a ≥3-flaw quota, a red-team test per iteration, and **10/10 reserved for flawless.** |
-| Never admits defeat | **Honest failure.** A 25-iteration cap or a real blocker ends with an evidence-backed report — never a fake 9. |
-
-**It's two agents in one skull:** the Builder ships, the Adversary burns it down. And the Adversary never says "good job."
+| "Rate yourself 0–10 and keep going" | **Evidence-gated scoring** — every pass condition must point to tests, command output, reproducible behavior, or a precise code reference. |
+| Treats every failing test as its own regression | **Baseline awareness** — records pre-existing failures before editing. |
+| Critiques itself, then ignores the critique | **Score reconciliation** — confirmed findings can lower scores before completion is decided. |
+| Invents problems to satisfy a critique quota | **Evidence-gated red-team** — report up to three material findings; never fabricate one to hit a number. |
+| Uses the same context to approve its own work | **Independent reviewer when available** — fresh-context/subagent review is preferred, with self-adversarial fallback. |
+| Re-runs an expensive full suite after every tiny edit | **Progressive verification** — targeted checks during iterations, full relevant verification at milestones and the final gate. |
+| Loops forever on a plateau | **Plateau → re-strategy** — three flat iterations force a genuinely different approach. |
+| Resumes from stale memory after the repo changed | **Checkpoint validation** — branch/HEAD/diff state is compared before reusing old evidence. |
+| Averages strong criteria over weak ones | **All-criteria gate** — every acceptance criterion must clear the threshold. |
+| Declares victory at the first green test | **Final Gate** — full relevant verification + diff review + final adversarial pass. |
+| Never admits defeat | **Honest exit** — blocker or budget reports instead of a fabricated 9/10. |
 
 ---
 
-## 🔁 The loop
+## The loop
 
-```
-        ┌─────────────────────────────────────────────┐
-        │  GOAL + RUBRIC (3–6 evidence-gated criteria) │
-        └───────────────────────┬─────────────────────┘
-                                ▼
-   ┌───────────────────────────────────────────────────────┐
-   │  A. WORK  → fix the single highest-impact flaw          │
-   │  B. TEST  → run the real suite (regression guard on)     │
-   │  C. SCORE → 0–10, every point backed by evidence        │
-   │  D. RED-TEAM → ≥3 flaws + 1 breaking test, no mercy      │
-   │  E. DECIDE → fix top flaw, or re-strategize on plateau  │
-   └───────────────────────┬───────────────────────────────┘
-                           ▼
-            every criterion ≥ 9/10 ? ──no──► loop again
-                           │yes
-                           ▼
-              FINAL GATE (diff-bounded verify) ──► DONE 🏆
+```text
+GOAL + BASELINE + RUBRIC
+          │
+          ▼
+      A. WORK
+          │
+          ▼
+      B. VERIFY
+          │
+          ▼
+      C. SCORE
+          │
+          ▼
+     D. RED-TEAM
+          │
+          ▼
+    E. RECONCILE
+          │
+          ▼
+      F. DECIDE
+      │       │
+   < 9/10   all ≥ 9/10
+      │       │
+      └──┐    ▼
+         └─ FINAL GATE ──► DONE
 ```
 
 ![GigiLoop cycle](assets/loop.svg)
 
 ---
 
-## 📦 Install (30 seconds)
+## Install
 
-GigiLoop lives in its own folder so opencode's skill loader finds `**/SKILL.md`.
+### Recommended — Agent Skills CLI
 
-**Option A — point opencode at the repo (recommended):**
-```json
-// opencode.json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "skills": {
-    "urls": ["https://github.com/CultureDigitali/gigiloop"]
-  }
-}
+```bash
+npx skills add CultureDigitali/gigiloop --skill gigiloop -a opencode
 ```
 
-**Option B — clone into your skills path:**
+Install globally:
+
+```bash
+npx skills add CultureDigitali/gigiloop --skill gigiloop -a opencode -g
+```
+
+### Manual
+
 ```bash
 git clone https://github.com/CultureDigitali/gigiloop ~/.config/opencode/skills/gigiloop
 ```
-(opencode also auto-loads `~/.claude/skills/` and `~/.agents/skills/` if you prefer those roots.)
 
-Then **quit and restart opencode** — config is loaded once at startup.
-
----
-
-## 🚀 Usage
-
-Just invoke it with a goal. A few real prompts:
-
-- `gigiloop: build a payments module for our Express API with tests, loop until 9/10`
-- `gigiloop: fix the login bug and harden the whole login flow to 9/10`
-- `gigiloop: polish our React component library to production-grade 9/10 — focus on a11y`
-- `gigiloop: ` *(no goal)* → it derives the best interpretation from context and goes anyway.
-
-Optional budget flags you can append: a wall-clock target, a custom max-iteration count, or *"ship when solid, don't chase 10."* With no budget, it defaults to the full loop (all criteria ≥ 9, up to 25 iterations).
+If your host uses a different Agent Skills directory, copy the `gigiloop/` folder into that location.
 
 ---
 
-## 🧪 Worked examples
+## Usage
 
-### 1 — Payments module → 9.2/10
-A naive pass went green on the happy path. GigiLoop's Adversary immediately flagged **missing idempotency on retries** (double-charge risk) and a **swallowed gateway timeout**. Two iterations later, both had regression-guarding tests. The double-charge bug would have shipped without the loop.
+Invoke GigiLoop with a concrete goal:
 
-### 2 — Login fix → 9.1/10
-The reported bug was a one-liner. GigiLoop expanded scope to the whole flow, then its Adversary found a **token logged in plaintext**. The loop removed the leak and added a red-team test asserting no secret leaks into logs.
+```text
+gigiloop: fix the login regression and harden the auth flow until every acceptance criterion is verified at 9/10
+```
 
-### 3 — Component library → 9.0/10
-Started working-but-fragile. The Adversary found a **keyboard trap** and **inconsistent required/optional props**. Final pass shipped an a11y-complete, consistent, tested library.
+```text
+gigiloop: build an idempotent payments endpoint with tests; don't stop at the happy path
+```
+
+```text
+gigiloop: make this React component production-grade, focusing on keyboard accessibility and regression safety
+```
+
+```text
+gigiloop: keep iterating until the failing CI job is fixed without introducing regressions
+```
+
+Optional constraints can be included naturally:
+
+```text
+max 8 iterations
+ship when solid; don't chase 10
+stay inside src/auth/**
+do not change the public API
+```
 
 ---
 
-## 🛡️ What it guarantees
+## What gets checkpointed
 
-- **Evidence or nothing** — no score without a reference.
-- **Never fake a 9** — honest failure report before a fabricated win.
-- **Resumable forever** — checkpoint survives compaction and restarts.
-- **Bounded cost** — diff-bounded final review, not whole-project re-reads.
+GigiLoop writes resumable state to `.gigiloop/checkpoint.md` when the project is writable. The checkpoint tracks:
+
+- goal, scope, constraints, and budget;
+- branch, HEAD, and repository state;
+- baseline verification and pre-existing failures;
+- weighted rubric and evidence tiers;
+- current scores and evidence;
+- confirmed findings and unresolved hypotheses;
+- iteration count and next action.
+
+If the repository changes outside the loop, stale evidence is invalidated before work resumes.
+
+See [`gigiloop/references/checkpoint.md`](gigiloop/references/checkpoint.md).
 
 ---
 
-## 📜 License
+## Evidence tiers
 
-MIT — do whatever you want, just don't blame GigiLoop when the Adversary is right about your code.
+A score is only as strong as the verification behind it. GigiLoop caps confidence according to the evidence available:
+
+| Evidence tier | Typical evidence | Practical ceiling |
+|---|---|---:|
+| T0 | intuition / unsupported claim | 4/10 |
+| T1 | static inspection only | 6/10 |
+| T2 | lint, typecheck, build, deterministic static checks | 7/10 |
+| T3 | targeted automated tests / reproducible behavior | 8/10 |
+| T4 | tests + adversarial edge cases + relevant integration verification | 9/10 |
+| T5 | T4 + independent/fresh-context review + clean final gate | 10/10 |
+
+The exact ceiling is context-dependent; the rule is simple: **a strong score requires proportionally strong evidence.**
+
+See [`gigiloop/references/scoring.md`](gigiloop/references/scoring.md).
 
 ---
 
-⭐ **If GigiLoop saved you from shipping broken work, star the repo.** Your agent's self-esteem can take the hit.
+## Benchmarks: prove it, do not market fiction
+
+The original GigiLoop examples described plausible outcomes such as catching retry idempotency bugs, secret leakage, and accessibility regressions. Those are useful scenarios, but they are **not presented as measured benchmark results unless they have actually been reproduced**.
+
+The repository now includes a benchmark protocol in [`benchmarks/README.md`](benchmarks/README.md) for comparing:
+
+- a normal one-pass coding agent;
+- a naive keep-going/Ralph-style loop;
+- GigiLoop;
+
+from the same starting commit, with the same model/host and hidden or independently evaluated checks.
+
+Measured results will be published only with reproducible fixtures and raw evidence.
+
+---
+
+## Design principles
+
+- **Evidence over confidence**
+- **Critique can invalidate a pass**
+- **No fake flaw quotas**
+- **Baseline before blame**
+- **Fast local loop, strong final gate**
+- **Fresh-context review when possible**
+- **Checkpoint state, but distrust stale state**
+- **Fail honestly when blocked**
+
+---
+
+## Repository layout
+
+```text
+.
+├── README.md
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── assets/
+│   ├── banner.svg
+│   └── loop.svg
+├── benchmarks/
+│   └── README.md
+├── gigiloop/
+│   ├── SKILL.md
+│   └── references/
+│       ├── checkpoint.md
+│       ├── scoring.md
+│       └── verification.md
+└── .github/
+    └── workflows/
+        └── validate-skill.yml
+```
+
+---
+
+## Contributing
+
+Reproducible benchmark cases, failure reports, portability fixes, and reviewer strategies are especially useful. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+If GigiLoop helps you catch something a normal coding pass would have shipped, open a benchmark case or issue with the evidence.
+
+---
+
+## License
+
+MIT.
+
+---
+
+⭐ **If GigiLoop improves a real result, star the repository and share the reproducible case.** Evidence is more useful than hype.
