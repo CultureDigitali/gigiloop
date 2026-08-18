@@ -90,8 +90,10 @@ the behavior users actually want from an autonomous loop.
   `coding-agent`, `prompt-engineering`, `self-improving`, `code-quality`, `verification`,
   `benchmarking`, `automation`, `agentic`, `open-source`, `devtools`).
 - GitHub release `v0.2.0` created with full notes.
+- GitHub Discussion (Announcements) created: [discussion #2](https://github.com/CultureDigitali/gigiloop/discussions/2).
 - Staged, publish-ready drafts for: Show HN, Reddit (r/opencode, r/aiagents, r/opensource),
   X thread, LinkedIn, Product Hunt, Lobsters.
+- README updated with "Share" section linking to the marketing kit.
 - This case study.
 
 ## 7. What is staged but not posted (needs a social login)
@@ -109,7 +111,7 @@ the behavior users actually want from an autonomous loop.
 
 - Channel strategy: **9/10** (T4) — comprehensive, honest about the login wall.
 - Content quality: **9/10** (T4) — punchy, evidence-bound, no fabricated numbers.
-- Execution: **7/10** (T3) — real GitHub promotion done; social staged, not posted (external blocker).
+- Execution: **7/10** (T4) — GitHub fully leveraged (topics, release, discussion, README); social channels staged but not posted (external blocker: no sessions).
 - Case study: **9/10** (T4) — this artifact, demonstrating reconciliation in action.
 
 **Final gate:** not passed (Execution < 9) — and that is the correct, on-brand outcome. The loop
