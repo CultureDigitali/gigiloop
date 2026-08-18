@@ -220,6 +220,14 @@ If GigiLoop helps you catch something a normal coding pass would have shipped, o
 
 ---
 
+## 📣 Share
+
+Ready-to-post drafts for every free channel: [`marketing/`](marketing/) (Show HN, Reddit, X, LinkedIn, Product Hunt, Lobsters, case study).
+
+Discussion: [github.com/CultureDigitali/gigiloop/discussions](https://github.com/CultureDigitali/gigiloop/discussions)
+
+---
+
 ## License
 
 MIT.
