@@ -1,26 +1,19 @@
-# GigiLoop compatibility
+# GigiLoop compatibility guide
 
-GigiLoop keeps one canonical Agent Skill in [`gigiloop/SKILL.md`](gigiloop/SKILL.md). The core protocol is deliberately host-neutral so the same evidence-first loop can run across modern coding agents that support the Agent Skills format.
+GigiLoop has one canonical source of truth:
 
-The open `skills` CLI currently supports OpenCode, Claude Code, Codex, Cursor, Gemini CLI and dozens of additional hosts. Use the canonical skill whenever the host supports Agent Skills directly; use the included adapters only when a host-specific workflow file is useful.
+- `gigiloop/SKILL.md`
+- supporting rules in `gigiloop/references/`
 
-## First-class targets
+Host adapters are intentionally small wrappers. They improve discovery but must not redefine the workflow.
 
-| Host | Agent Skills target | Typical project path | GigiLoop status |
-|---|---|---|---|
-| OpenCode | `opencode` | `.agents/skills/` | Native skill |
-| Claude Code | `claude-code` | `.claude/skills/` | Native skill |
-| Codex | `codex` | `.agents/skills/` | Native skill + `AGENTS.md` adapter |
-| Cursor | `cursor` | `.agents/skills/` | Native skill + optional `.mdc` adapter |
-| Gemini CLI | `gemini-cli` | `.agents/skills/` | Native skill + `GEMINI.md` adapter |
-| GitHub Copilot | `github-copilot` | `.agents/skills/` | Native skill |
-| Cline | `cline` | `.agents/skills/` | Native skill |
-| OpenHands | `openhands` | `.openhands/skills/` | Native skill |
-| Amp | `amp` | `.agents/skills/` | Native skill |
+## Recommended installation
 
-The wider Agent Skills ecosystem includes many more compatible hosts. Run `npx skills add CultureDigitali/gigiloop --skill gigiloop` interactively to select the agents detected on your machine, or target specific hosts with `-a`.
+```bash
+npx skills add CultureDigitali/gigiloop --skill gigiloop
+```
 
-## Installation examples
+The Agent Skills CLI can detect supported agents interactively. Target a host explicitly with `-a` and add `-g` for a user-level installation.
 
 ```bash
 # OpenCode
@@ -38,40 +31,63 @@ npx skills add CultureDigitali/gigiloop --skill gigiloop -a cursor
 # Gemini CLI
 npx skills add CultureDigitali/gigiloop --skill gigiloop -a gemini-cli
 
-# GitHub Copilot
-npx skills add CultureDigitali/gigiloop --skill gigiloop -a github-copilot
-
-# Install to every detected agent
+# Every detected supported target
 npx skills add CultureDigitali/gigiloop --skill gigiloop --agent '*'
 ```
 
-Add `-g` for a global installation.
+## Support levels
 
-## Host-neutral behavior
+| Host | Canonical skill | Convenience adapter | Notes |
+|---|---:|---:|---|
+| OpenCode | ✅ | — | direct Agent Skill |
+| Claude Code | ✅ | — | direct Agent Skill |
+| Codex | ✅ | `adapters/codex/AGENTS.md` | adapter is optional |
+| Cursor | ✅ | `.cursor/rules/gigiloop.mdc` | adapter improves rule discovery |
+| Gemini CLI | ✅ | `adapters/gemini-cli/GEMINI.md` | adapter is optional |
+| GitHub Copilot | ✅ | — | use Agent Skills installation target |
+| Cline | ✅ | — | use Agent Skills installation target |
+| OpenHands | ✅ | — | use Agent Skills installation target |
+| Amp | ✅ | — | use Agent Skills installation target |
+| Other Agent Skills hosts | usually | host-dependent | preserve the canonical integrity and evidence contract |
 
-GigiLoop preserves the same core contract on every host:
+“Supported” means the host can consume the instruction set. It does not guarantee identical subagent, hook, shell, persistence, or sandbox capabilities.
 
-1. establish the repository baseline before edits;
-2. turn the goal into measurable acceptance criteria;
-3. work on the highest-impact verified gap;
-4. run targeted checks while iterating and broader checks at milestones;
-5. score only from evidence;
-6. red-team the current diff without inventing findings;
-7. reconcile scores after critique;
-8. change strategy when progress plateaus;
-9. checkpoint enough state to resume safely;
-10. require a final verification gate before declaring success.
+## Behavioral compatibility contract
 
-Host-specific capabilities are enhancements, not dependencies. If the host exposes subagents, a fresh-context reviewer, todo/task state, hooks, or native checkpoints, GigiLoop may use them. If those features are absent, the canonical protocol still works.
+Every host must preserve these behaviors:
 
-## Included adapters
+1. choose and record `strict`, `balanced`, or `fast` without silently downgrading;
+2. baseline repository state, failures, and protected local work;
+3. define measurable acceptance criteria and a verification contract;
+4. verify with current evidence tied to the current code state;
+5. reject test/threshold weakening used merely to obtain green output;
+6. preserve unrelated user work and avoid unauthorized destructive operations;
+7. adversarially review and reconcile before completion;
+8. checkpoint progress and invalidate stale evidence after external changes;
+9. exit as `SUCCESS`, `BLOCKED`, `BUDGET EXHAUSTED`, or `STOPPED` with a current evidence report.
 
-- [`adapters/codex/AGENTS.md`](adapters/codex/AGENTS.md)
-- [`adapters/gemini-cli/GEMINI.md`](adapters/gemini-cli/GEMINI.md)
-- [`.cursor/rules/gigiloop.mdc`](.cursor/rules/gigiloop.mdc)
+Read `gigiloop/references/hosts.md` for capability fallbacks.
 
-These wrappers intentionally remain small. The canonical `gigiloop/SKILL.md` is the source of truth.
+## Manual installation
 
-## Trademark note
+Copy the complete `gigiloop/` directory into the Agent Skills directory used by the host. Do not copy only `SKILL.md`; the references, metadata, and logo asset are part of the skill bundle.
 
-Product names and third-party marks belong to their respective owners. Compatibility means GigiLoop can be installed or adapted for the named host; it does **not** imply endorsement, sponsorship, or partnership.
+When a host does not discover generic skills, use the relevant adapter and keep its reference to the canonical skill.
+
+## Fresh-context review
+
+A separate reviewer/subagent provides stronger evidence but is not universally available.
+
+- When available, prefer it for strict mode and potential T5 scoring.
+- When unavailable, use a distinct adversarial pass and cap confidence according to `gigiloop/references/scoring.md`.
+- Never claim independent review when the same context performed both implementation and approval.
+
+## State and checkpoints
+
+Host task lists and plans are useful mirrors. `.gigiloop/checkpoint.md` remains authoritative because host UI state may disappear, compact, or drift.
+
+## Branding and endorsement
+
+The approved compatibility artwork is stored at `assets/gigiloop-compatibility.jpg`. Third-party product names and marks identify compatibility only; they do not imply endorsement, sponsorship, or partnership.
+
+See `assets/BRANDING.md` for the canonical GigiLoop visual assets and change-control rules.
