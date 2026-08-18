@@ -1,34 +1,78 @@
 # ⚡ GigiLoop — Verification-First Autonomous Coding
 
-![GigiLoop banner](assets/banner.svg)
+![GigiLoop — One skill. Many agent hosts.](assets/banner-v2.svg)
 
-> **Build → test → red-team → reconcile → verify → repeat. GigiLoop keeps working until your acceptance criteria are backed by evidence, not agent confidence.**
+<p align="center">
+  <strong>The loop that does not trust itself.</strong><br>
+  Build → Test → Red-team → Reconcile → Verify → Repeat.
+</p>
 
-GigiLoop is an autonomous coding skill for OpenCode and compatible agent-skill hosts. It is designed for the moment when "keep trying until it works" is not enough: it establishes a baseline, defines measurable acceptance criteria, iterates on the highest-impact issue, adversarially reviews its own diff, reconciles scores after critique, and only ships after a final verification gate.
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#works-across-agent-hosts">Compatibility</a> ·
+  <a href="COMPATIBILITY.md">Host guide</a> ·
+  <a href="benchmarks/README.md">Benchmarks</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
 
-**Think Ralph Loop, but with a hostile reviewer and an evidence gate.**
+GigiLoop is a **verification-first autonomous coding skill** for OpenCode, Claude Code, Codex, Cursor, Gemini CLI and the wider Agent Skills ecosystem. It turns “keep trying until it works” into a bounded engineering protocol: baseline the repo, define measurable acceptance criteria, iterate on the highest-impact gap, attack the diff, reconcile the evidence, and only ship after a final verification gate.
 
-No vibes. No "looks good to me." **Proof or it does not pass.**
+> **Think Ralph Loop, but with a hostile reviewer and an evidence gate.**
+
+No vibes. No “looks good to me.” **Proof or it does not pass.**
+
+---
+
+## Works across agent hosts
+
+The canonical `gigiloop/SKILL.md` is intentionally host-neutral. The open Agent Skills CLI can install skills across a large set of coding agents; GigiLoop additionally ships small host adapters where a native workflow file is useful.
+
+| Host | Install target | Support |
+|---|---|---|
+| **OpenCode** | `opencode` | ✅ Native Agent Skill |
+| **Claude Code** | `claude-code` | ✅ Native Agent Skill |
+| **Codex** | `codex` | ✅ Native + `AGENTS.md` adapter |
+| **Cursor** | `cursor` | ✅ Native + optional `.mdc` rule |
+| **Gemini CLI** | `gemini-cli` | ✅ Native + `GEMINI.md` adapter |
+| **GitHub Copilot** | `github-copilot` | ✅ Agent Skill |
+| **Cline** | `cline` | ✅ Agent Skill |
+| **OpenHands** | `openhands` | ✅ Agent Skill |
+| **Amp** | `amp` | ✅ Agent Skill |
+| **Many more** | interactive detection | ✅ Agent Skills ecosystem |
+
+See [`COMPATIBILITY.md`](COMPATIBILITY.md) for installation paths, adapters, and portability rules.
+
+### Official brand resources
+
+Compatibility is descriptive; it does not imply endorsement or partnership. Where vendor marks are displayed or reused, use the original vendor-controlled assets and guidelines:
+
+- [OpenCode brand assets](https://opencode.ai/brand)
+- [Claude / Anthropic press assets](https://www.anthropic.com/news)
+- [OpenAI brand guidelines](https://openai.com/brand/)
+- [Cursor brand assets](https://cursor.com/brand)
+- [Google Brand Resource Center](https://about.google/brand-resource-center/)
+
+See [`assets/BRANDING.md`](assets/BRANDING.md). GigiLoop’s own mark is [`assets/logo-v2.svg`](assets/logo-v2.svg).
 
 ---
 
 ## Why GigiLoop exists
 
-Naive autonomous loops have predictable failure modes. GigiLoop is built to counter them directly:
+Naive autonomous loops fail in predictable ways. GigiLoop builds controls directly around those failure modes.
 
 | Naive autonomous loop | GigiLoop |
 |---|---|
-| "Rate yourself 0–10 and keep going" | **Evidence-gated scoring** — every pass condition must point to tests, command output, reproducible behavior, or a precise code reference. |
-| Treats every failing test as its own regression | **Baseline awareness** — records pre-existing failures before editing. |
-| Critiques itself, then ignores the critique | **Score reconciliation** — confirmed findings can lower scores before completion is decided. |
-| Invents problems to satisfy a critique quota | **Evidence-gated red-team** — report up to three material findings; never fabricate one to hit a number. |
-| Uses the same context to approve its own work | **Independent reviewer when available** — fresh-context/subagent review is preferred, with self-adversarial fallback. |
-| Re-runs an expensive full suite after every tiny edit | **Progressive verification** — targeted checks during iterations, full relevant verification at milestones and the final gate. |
-| Loops forever on a plateau | **Plateau → re-strategy** — three flat iterations force a genuinely different approach. |
-| Resumes from stale memory after the repo changed | **Checkpoint validation** — branch/HEAD/diff state is compared before reusing old evidence. |
-| Averages strong criteria over weak ones | **All-criteria gate** — every acceptance criterion must clear the threshold. |
-| Declares victory at the first green test | **Final Gate** — full relevant verification + diff review + final adversarial pass. |
-| Never admits defeat | **Honest exit** — blocker or budget reports instead of a fabricated 9/10. |
+| “Rate yourself and keep going” | **Evidence-gated scoring** — tests, command output, reproducible behavior, or precise code references. |
+| Treats every failing test as its own regression | **Baseline awareness** — pre-existing failures are recorded before edits. |
+| Critiques itself, then ignores the critique | **Score reconciliation** — confirmed findings can lower a previously passing score. |
+| Invents problems to satisfy a quota | **Evidence-gated red-team** — up to three material findings; never fabricate one. |
+| Uses the same context to approve its own work | **Independent reviewer when available** — fresh-context/subagent review is preferred. |
+| Re-runs an expensive full suite after every tiny edit | **Progressive verification** — fast affected checks while iterating, broad checks at milestones/final gate. |
+| Loops forever on a plateau | **Plateau → re-strategy** — repeated flat progress forces a genuinely different approach. |
+| Resumes from stale memory after the repo changed | **Checkpoint validation** — stale evidence is invalidated when repository state changes. |
+| Averages strong criteria over weak ones | **All-criteria gate** — every criterion must clear the requested threshold. |
+| Declares victory at the first green test | **Final Gate** — relevant full verification + complete diff review + final adversarial pass. |
+| Never admits defeat | **Honest exit** — blocker or budget reports instead of fabricated success. |
 
 ---
 
@@ -55,7 +99,8 @@ GOAL + BASELINE + RUBRIC
           ▼
       F. DECIDE
       │       │
-   < 9/10   all ≥ 9/10
+   below     all criteria
+ threshold   verified
       │       │
       └──┐    ▼
          └─ FINAL GATE ──► DONE
@@ -67,31 +112,45 @@ GOAL + BASELINE + RUBRIC
 
 ## Install
 
-### Recommended — Agent Skills CLI
+### One command
 
 ```bash
+npx skills add CultureDigitali/gigiloop --skill gigiloop
+```
+
+Choose your detected agent interactively, or target one explicitly:
+
+```bash
+# OpenCode
 npx skills add CultureDigitali/gigiloop --skill gigiloop -a opencode
+
+# Claude Code
+npx skills add CultureDigitali/gigiloop --skill gigiloop -a claude-code
+
+# Codex
+npx skills add CultureDigitali/gigiloop --skill gigiloop -a codex
+
+# Cursor
+npx skills add CultureDigitali/gigiloop --skill gigiloop -a cursor
+
+# Gemini CLI
+npx skills add CultureDigitali/gigiloop --skill gigiloop -a gemini-cli
+
+# All detected/supported targets
+npx skills add CultureDigitali/gigiloop --skill gigiloop --agent '*'
 ```
 
-Install globally:
-
-```bash
-npx skills add CultureDigitali/gigiloop --skill gigiloop -a opencode -g
-```
+Add `-g` for a global/user-level installation.
 
 ### Manual
 
-```bash
-git clone https://github.com/CultureDigitali/gigiloop ~/.config/opencode/skills/gigiloop
-```
-
-If your host uses a different Agent Skills directory, copy the `gigiloop/` folder into that location.
+Copy the `gigiloop/` folder into the Agent Skills directory used by your host. The host-specific wrappers under `adapters/` and `.cursor/rules/` are optional conveniences; `gigiloop/SKILL.md` remains the source of truth.
 
 ---
 
 ## Usage
 
-Invoke GigiLoop with a concrete goal:
+Invoke GigiLoop with a concrete engineering goal:
 
 ```text
 gigiloop: fix the login regression and harden the auth flow until every acceptance criterion is verified at 9/10
@@ -109,7 +168,7 @@ gigiloop: make this React component production-grade, focusing on keyboard acces
 gigiloop: keep iterating until the failing CI job is fixed without introducing regressions
 ```
 
-Optional constraints can be included naturally:
+Natural constraints work too:
 
 ```text
 max 8 iterations
@@ -120,29 +179,11 @@ do not change the public API
 
 ---
 
-## What gets checkpointed
-
-GigiLoop writes resumable state to `.gigiloop/checkpoint.md` when the project is writable. The checkpoint tracks:
-
-- goal, scope, constraints, and budget;
-- branch, HEAD, and repository state;
-- baseline verification and pre-existing failures;
-- weighted rubric and evidence tiers;
-- current scores and evidence;
-- confirmed findings and unresolved hypotheses;
-- iteration count and next action.
-
-If the repository changes outside the loop, stale evidence is invalidated before work resumes.
-
-See [`gigiloop/references/checkpoint.md`](gigiloop/references/checkpoint.md).
-
----
-
 ## Evidence tiers
 
-A score is only as strong as the verification behind it. GigiLoop caps confidence according to the evidence available:
+A strong score requires proportionally strong evidence.
 
-| Evidence tier | Typical evidence | Practical ceiling |
+| Tier | Typical evidence | Practical ceiling |
 |---|---|---:|
 | T0 | intuition / unsupported claim | 4/10 |
 | T1 | static inspection only | 6/10 |
@@ -151,25 +192,45 @@ A score is only as strong as the verification behind it. GigiLoop caps confidenc
 | T4 | tests + adversarial edge cases + relevant integration verification | 9/10 |
 | T5 | T4 + independent/fresh-context review + clean final gate | 10/10 |
 
-The exact ceiling is context-dependent; the rule is simple: **a strong score requires proportionally strong evidence.**
-
 See [`gigiloop/references/scoring.md`](gigiloop/references/scoring.md).
+
+---
+
+## Resumable without trusting stale state
+
+When the project is writable, GigiLoop uses `.gigiloop/checkpoint.md` to track:
+
+- goal, scope, constraints, and budget;
+- branch, HEAD, and repository state;
+- baseline verification and pre-existing failures;
+- rubric and evidence tiers;
+- current scores and evidence;
+- confirmed findings and unresolved hypotheses;
+- iteration count and next action.
+
+If the repository changes outside the loop, affected evidence is invalidated before resuming. See [`gigiloop/references/checkpoint.md`](gigiloop/references/checkpoint.md).
+
+---
+
+## Host portability
+
+Host-specific features are accelerators, not dependencies. GigiLoop can use a subagent/fresh context for independent review, a host task list for mirrored state, or hooks for deterministic checks when available. The evidence contract remains the same when those features do not exist.
+
+See [`gigiloop/references/hosts.md`](gigiloop/references/hosts.md) and [`COMPATIBILITY.md`](COMPATIBILITY.md).
 
 ---
 
 ## Benchmarks: prove it, do not market fiction
 
-The original GigiLoop examples described plausible outcomes such as catching retry idempotency bugs, secret leakage, and accessibility regressions. Those are useful scenarios, but they are **not presented as measured benchmark results unless they have actually been reproduced**.
-
-The repository now includes a benchmark protocol in [`benchmarks/README.md`](benchmarks/README.md) for comparing:
+GigiLoop does **not** publish invented success rates. [`benchmarks/README.md`](benchmarks/README.md) defines a reproducible comparison protocol for:
 
 - a normal one-pass coding agent;
-- a naive keep-going/Ralph-style loop;
+- a naive keep-going / Ralph-style loop;
 - GigiLoop;
 
-from the same starting commit, with the same model/host and hidden or independently evaluated checks.
+from the same starting commit, with comparable model/host budgets and independent or hidden checks where practical.
 
-Measured results will be published only with reproducible fixtures and raw evidence.
+Measured claims belong in the README only after raw evidence can reconstruct them.
 
 ---
 
@@ -181,7 +242,8 @@ Measured results will be published only with reproducible fixtures and raw evide
 - **Baseline before blame**
 - **Fast local loop, strong final gate**
 - **Fresh-context review when possible**
-- **Checkpoint state, but distrust stale state**
+- **Checkpoint state, distrust stale state**
+- **One canonical skill across hosts**
 - **Fail honestly when blocked**
 
 ---
@@ -191,39 +253,44 @@ Measured results will be published only with reproducible fixtures and raw evide
 ```text
 .
 ├── README.md
+├── COMPATIBILITY.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
 ├── assets/
-│   ├── banner.svg
-│   └── loop.svg
-├── benchmarks/
-│   └── README.md
-├── gigiloop/
-│   ├── SKILL.md
-│   └── references/
-│       ├── checkpoint.md
-│       ├── scoring.md
-│       └── verification.md
-└── .github/
-    └── workflows/
-        └── validate-skill.yml
+│   ├── logo-v2.svg
+│   ├── banner-v2.svg
+│   ├── loop.svg
+│   └── BRANDING.md
+├── adapters/
+│   ├── codex/AGENTS.md
+│   └── gemini-cli/GEMINI.md
+├── .cursor/rules/gigiloop.mdc
+├── benchmarks/README.md
+└── gigiloop/
+    ├── SKILL.md
+    ├── agents/openai.yaml
+    └── references/
+        ├── checkpoint.md
+        ├── hosts.md
+        ├── scoring.md
+        └── verification.md
 ```
 
 ---
 
 ## Contributing
 
-Reproducible benchmark cases, failure reports, portability fixes, and reviewer strategies are especially useful. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Reproducible benchmark cases, failure reports, portability fixes, host adapters, and reviewer strategies are especially useful. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-If GigiLoop helps you catch something a normal coding pass would have shipped, open a benchmark case or issue with the evidence.
+If GigiLoop catches something a normal coding pass would have shipped, open a benchmark case with the evidence.
 
 ---
 
 ## License
 
-MIT.
+MIT. Third-party names and marks remain property of their respective owners and are referenced only to describe compatibility.
 
 ---
 
-⭐ **If GigiLoop improves a real result, star the repository and share the reproducible case.** Evidence is more useful than hype.
+⭐ **If GigiLoop improves a real result, star the repository and share the reproducible case. Evidence is more useful than hype.**
