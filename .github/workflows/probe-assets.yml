@@ -1,58 +1,45 @@
-name: Probe approved visual blobs
+name: Promote approved GigiLoop visuals
 
 on:
   push:
     branches:
       - polish/approved-visuals-v0.3.1
-  pull_request:
-    branches:
-      - main
+
+permissions:
+  contents: write
 
 jobs:
-  inspect:
+  promote:
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect JPEG assets
+        with:
+          ref: polish/approved-visuals-v0.3.1
+          fetch-depth: 0
+      - name: Verify and promote approved renders
         shell: bash
         run: |
           set -euo pipefail
-          sha256sum .probe/*.jpg
-          wc -c .probe/*.jpg
-          file .probe/*.jpg
-          python - <<'PY'
-          from pathlib import Path
-          from struct import unpack
+          test -f .probe/banner.jpg
+          test -f .probe/logo.jpg
+          test -f .probe/compat.jpg
 
-          def jpeg_size(path: Path):
-              data = path.read_bytes()
-              if data[:2] != b'\xff\xd8':
-                  raise SystemExit(f'{path}: not a JPEG')
-              i = 2
-              while i < len(data):
-                  if data[i] != 0xFF:
-                      i += 1
-                      continue
-                  while i < len(data) and data[i] == 0xFF:
-                      i += 1
-                  marker = data[i]
-                  i += 1
-                  if marker in (0xD8, 0xD9):
-                      continue
-                  length = unpack('>H', data[i:i+2])[0]
-                  if marker in range(0xC0, 0xC4):
-                      height, width = unpack('>HH', data[i+3:i+7])
-                      return width, height
-                  i += length
-              raise SystemExit(f'{path}: dimensions not found')
+          echo '9042e8b31e7ef514aeb459bcbf2601a791340cf70f3ef1749f83beb9ef50f157  .probe/banner.jpg' | sha256sum -c -
+          echo '67f3733445edfd7992cccba30a1eada1463e5a30f8462dc47e0daeae8eb40eae  .probe/compat.jpg' | sha256sum -c -
+          echo 'c07eda5c8557983d757ca48a7988fd3d4b2bb1f80ce8937cd6d27dfa071e5af4  .probe/logo.jpg' | sha256sum -c -
 
-          for path in sorted(Path('.probe').glob('*.jpg')):
-              print(path, jpeg_size(path))
-          PY
-      - name: Export inspected visuals
-        uses: actions/upload-artifact@v4
-        with:
-          name: approved-visual-probe
-          path: .probe/*.jpg
-          if-no-files-found: error
-          include-hidden-files: true
+          mkdir -p assets gigiloop/assets
+          cp .probe/banner.jpg assets/gigiloop-superbanner.jpg
+          cp .probe/compat.jpg assets/gigiloop-compatibility.jpg
+          cp .probe/logo.jpg assets/gigiloop-logo.jpg
+          cp .probe/logo.jpg gigiloop/assets/gigiloop-logo.jpg
+
+          rm -rf .probe
+          rm -f .github/workflows/probe-assets.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Promote approved GigiLoop visual renders'
+          git push origin HEAD:polish/approved-visuals-v0.3.1
