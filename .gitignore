@@ -1,0 +1,9 @@
+# Never commit loop state, secrets, or checkpoints
+.opencode/
+gigiloop/checkpoint.md
+**/checkpoint.md
+*.log
+.env
+.env.*
+secrets/
+.DS_Store
