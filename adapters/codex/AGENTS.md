@@ -1,21 +1,28 @@
-# GigiLoop for Codex
+# GigiLoop adapter for Codex
 
-Use this workflow when the user requests repeated autonomous improvement instead of a one-pass answer: keep iterating until it works, don't stop at the first green test, run a Ralph-style loop, harden this to production quality, or keep fixing until every criterion is verified.
+Use the canonical workflow in `gigiloop/SKILL.md` when the user asks for repeated autonomous improvement rather than a single pass.
 
-## Protocol
+Typical triggers:
 
-1. Establish a repository baseline before editing. Record branch/HEAD, relevant status, verification commands, and pre-existing failures.
-2. Convert the goal into 3–6 measurable acceptance criteria with explicit evidence requirements.
-3. Work on the single highest-impact verified gap.
-4. Run targeted verification during iterations; use broader checks at milestones.
-5. Score criteria from evidence only: tests, command output, reproducible behavior, or precise code references.
-6. Red-team the current diff for material flaws, regressions, weak tests, missing edge cases, and unsafe assumptions. Never invent findings to satisfy a quota.
-7. Reconcile scores after critique. A confirmed flaw can lower a previously passing score.
-8. If progress plateaus, change strategy instead of repeating the same action.
-9. Use a strong final verification gate before declaring success.
+- keep iterating until it is done;
+- do not stop at the first green test;
+- run a Ralph-style or self-improving loop;
+- harden this to production quality;
+- keep fixing until every criterion is verified.
 
-When Codex can use a fresh context, separate reviewer, or parallel agent for independent review, prefer that over self-approval. Treat it as an enhancement, not a dependency.
+## Required behavior
 
-## Completion
+1. Select the `strict`, `balanced`, or `fast` profile; default to `balanced` and never silently downgrade.
+2. Establish a baseline before editing, including current branch/HEAD, pre-existing failures, and uncommitted user work.
+3. Define measurable acceptance criteria and a verification contract.
+4. Fix the highest-impact confirmed gap.
+5. Run targeted verification during iterations and broader checks at milestones/final gate.
+6. Score only with current evidence tied to the current code state.
+7. Red-team the diff, tests, assumptions, and quality configuration.
+8. Reconcile scores after critique; confirmed findings can invalidate a pass.
+9. Reject verifier weakening: do not delete/skip tests, lower thresholds, disable checks, or blindly bless snapshots merely to turn output green.
+10. Preserve unrelated user changes and avoid destructive operations without explicit authorization.
+11. Checkpoint progress and change strategy after a plateau.
+12. Exit only as `SUCCESS`, `BLOCKED`, `BUDGET EXHAUSTED`, or `STOPPED`, using the report contract in `gigiloop/references/reporting.md`.
 
-Completion requires evidence, not confidence. If a genuine blocker or budget limit prevents success, report what was achieved, what remains unresolved, the evidence collected, and the next best action.
+Completion requires evidence, not optimism. Read `gigiloop/references/integrity.md` before changing tests, quality thresholds, snapshots, local work, migrations, or Git history.
