@@ -1,0 +1,46 @@
+name: Validate skill
+
+on:
+  push:
+    paths:
+      - 'gigiloop/**'
+      - '.github/workflows/validate-skill.yml'
+  pull_request:
+    paths:
+      - 'gigiloop/**'
+      - '.github/workflows/validate-skill.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate SKILL.md frontmatter and references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          skill = Path('gigiloop/SKILL.md')
+          text = skill.read_text(encoding='utf-8')
+          if not text.startswith('---\n'):
+              raise SystemExit('SKILL.md must start with YAML frontmatter')
+          m = re.match(r'^---\n(.*?)\n---\n', text, re.S)
+          if not m:
+              raise SystemExit('Invalid YAML frontmatter delimiters')
+          fm = m.group(1)
+          if not re.search(r'^name:\s+gigiloop\s*$', fm, re.M):
+              raise SystemExit('Expected name: gigiloop')
+          if not re.search(r'^description:\s+.+$', fm, re.M):
+              raise SystemExit('Missing description')
+          for ref in ['references/scoring.md', 'references/checkpoint.md', 'references/verification.md']:
+              if ref not in text:
+                  raise SystemExit(f'SKILL.md does not reference {ref}')
+              if not (Path('gigiloop') / ref).exists():
+                  raise SystemExit(f'Missing {ref}')
+          print('GigiLoop skill validation passed')
+          PY
