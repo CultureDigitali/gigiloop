@@ -1,4 +1,4 @@
-name: Validate skill
+name: Validate GigiLoop
 
 on:
   push:
@@ -7,8 +7,9 @@ on:
       - 'adapters/**'
       - '.cursor/rules/gigiloop.mdc'
       - 'COMPATIBILITY.md'
-      - 'assets/logo-v2.svg'
-      - 'assets/banner-v2.svg'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'assets/**'
       - '.github/workflows/validate-skill.yml'
   pull_request:
     paths:
@@ -16,8 +17,9 @@ on:
       - 'adapters/**'
       - '.cursor/rules/gigiloop.mdc'
       - 'COMPATIBILITY.md'
-      - 'assets/logo-v2.svg'
-      - 'assets/banner-v2.svg'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'assets/**'
       - '.github/workflows/validate-skill.yml'
 
 jobs:
@@ -28,50 +30,166 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate SKILL.md, references, adapters, and branding
+      - name: Validate skill, adapters, metadata, and approved visuals
         run: |
           python - <<'PY'
           from pathlib import Path
+          from struct import unpack
+          import hashlib
+          import json
           import re
+          import zipfile
 
-          skill = Path('gigiloop/SKILL.md')
+          root = Path('.')
+          skill = root / 'gigiloop/SKILL.md'
           text = skill.read_text(encoding='utf-8')
+
           if not text.startswith('---\n'):
               raise SystemExit('SKILL.md must start with YAML frontmatter')
-          m = re.match(r'^---\n(.*?)\n---\n', text, re.S)
-          if not m:
-              raise SystemExit('Invalid YAML frontmatter delimiters')
-          fm = m.group(1)
-          if not re.search(r'^name:\s+gigiloop\s*$', fm, re.M):
+          match = re.match(r'^---\n(.*?)\n---\n', text, re.S)
+          if not match:
+              raise SystemExit('Invalid SKILL.md frontmatter delimiters')
+          frontmatter = match.group(1)
+          if not re.search(r'^name:\s+gigiloop\s*$', frontmatter, re.M):
               raise SystemExit('Expected name: gigiloop')
-          if not re.search(r'^description:\s+.+$', fm, re.M):
+          description_match = re.search(r'^description:\s+(.+)$', frontmatter, re.M)
+          if not description_match:
               raise SystemExit('Missing description')
+          description = description_match.group(1).strip()
+          if len(description) > 1024 or '<' in description or '>' in description:
+              raise SystemExit('Invalid skill description')
+          if len(text.splitlines()) > 500:
+              raise SystemExit('SKILL.md should remain below 500 lines')
 
           required = [
               'gigiloop/references/scoring.md',
               'gigiloop/references/checkpoint.md',
               'gigiloop/references/verification.md',
+              'gigiloop/references/integrity.md',
+              'gigiloop/references/reporting.md',
               'gigiloop/references/hosts.md',
               'gigiloop/agents/openai.yaml',
+              'gigiloop/assets/gigiloop-logo.jpg',
               'COMPATIBILITY.md',
               'adapters/codex/AGENTS.md',
               'adapters/gemini-cli/GEMINI.md',
               '.cursor/rules/gigiloop.mdc',
-              'assets/logo-v2.svg',
-              'assets/banner-v2.svg',
+              'assets/gigiloop-logo.jpg',
+              'assets/gigiloop-superbanner.jpg',
+              'assets/gigiloop-compatibility.jpg',
+              'assets/visual-manifest.json',
+              'assets/BRANDING.md',
           ]
           for item in required:
-              if not Path(item).exists():
+              if not (root / item).exists():
                   raise SystemExit(f'Missing required file: {item}')
 
-          for ref in ['references/scoring.md', 'references/checkpoint.md', 'references/verification.md']:
+          for ref in [
+              'references/scoring.md',
+              'references/checkpoint.md',
+              'references/verification.md',
+              'references/integrity.md',
+              'references/reporting.md',
+              'references/hosts.md',
+          ]:
               if ref not in text:
                   raise SystemExit(f'SKILL.md does not reference {ref}')
 
-          for svg in ['assets/logo-v2.svg', 'assets/banner-v2.svg']:
-              data = Path(svg).read_text(encoding='utf-8')
-              if '<svg' not in data or '</svg>' not in data:
-                  raise SystemExit(f'Invalid SVG asset: {svg}')
+          metadata = (root / 'gigiloop/agents/openai.yaml').read_text(encoding='utf-8')
+          for expected in [
+              'display_name: "GigiLoop"',
+              'icon_small: "./assets/gigiloop-logo.jpg"',
+              'icon_large: "./assets/gigiloop-logo.jpg"',
+              'brand_color: "#7C5CFF"',
+              '$gigiloop',
+          ]:
+              if expected not in metadata:
+                  raise SystemExit(f'Missing openai.yaml metadata: {expected}')
 
-          print('GigiLoop multihost validation passed')
+          readme = (root / 'README.md').read_text(encoding='utf-8')
+          for approved in [
+              'assets/gigiloop-superbanner.jpg',
+              'assets/gigiloop-compatibility.jpg',
+          ]:
+              if approved not in readme:
+                  raise SystemExit(f'README does not use approved visual: {approved}')
+          if 'assets/banner-v2.svg' in readme:
+              raise SystemExit('README still references the rejected simplified banner')
+
+          expected = {
+              'assets/gigiloop-superbanner.jpg': (
+                  '9042e8b31e7ef514aeb459bcbf2601a791340cf70f3ef1749f83beb9ef50f157',
+                  (1200, 400),
+              ),
+              'assets/gigiloop-compatibility.jpg': (
+                  '67f3733445edfd7992cccba30a1eada1463e5a30f8462dc47e0daeae8eb40eae',
+                  (1600, 537),
+              ),
+              'assets/gigiloop-logo.jpg': (
+                  'c07eda5c8557983d757ca48a7988fd3d4b2bb1f80ce8937cd6d27dfa071e5af4',
+                  (600, 600),
+              ),
+              'gigiloop/assets/gigiloop-logo.jpg': (
+                  'c07eda5c8557983d757ca48a7988fd3d4b2bb1f80ce8937cd6d27dfa071e5af4',
+                  (600, 600),
+              ),
+          }
+
+          def jpeg_size(path: Path):
+              data = path.read_bytes()
+              if data[:2] != b'\xff\xd8':
+                  raise SystemExit(f'{path}: not a JPEG')
+              i = 2
+              while i < len(data):
+                  if data[i] != 0xFF:
+                      i += 1
+                      continue
+                  while i < len(data) and data[i] == 0xFF:
+                      i += 1
+                  marker = data[i]
+                  i += 1
+                  if marker in (0xD8, 0xD9):
+                      continue
+                  length = unpack('>H', data[i:i+2])[0]
+                  if marker in range(0xC0, 0xC4):
+                      height, width = unpack('>HH', data[i+3:i+7])
+                      return width, height
+                  i += length
+              raise SystemExit(f'{path}: JPEG dimensions not found')
+
+          for rel, (digest, dimensions) in expected.items():
+              path = root / rel
+              actual_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if actual_digest != digest:
+                  raise SystemExit(f'{rel}: SHA-256 mismatch')
+              if jpeg_size(path) != dimensions:
+                  raise SystemExit(f'{rel}: dimension mismatch')
+
+          manifest = json.loads((root / 'assets/visual-manifest.json').read_text(encoding='utf-8'))
+          for rel, (digest, dimensions) in expected.items():
+              entry = manifest['assets'].get(rel)
+              if not entry:
+                  raise SystemExit(f'Manifest missing {rel}')
+              if entry['sha256'] != digest:
+                  raise SystemExit(f'Manifest hash mismatch for {rel}')
+              if (entry['width'], entry['height']) != dimensions:
+                  raise SystemExit(f'Manifest dimensions mismatch for {rel}')
+
+          if (root / '.probe').exists():
+              raise SystemExit('Temporary .probe directory must not ship')
+          if (root / '.github/workflows/probe-assets.yml').exists():
+              raise SystemExit('Temporary probe workflow must not ship')
+
+          out = Path('/tmp/skill.zip')
+          with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
+              for path in sorted((root / 'gigiloop').rglob('*')):
+                  if path.is_file():
+                      archive.write(path, path.relative_to(root))
+          with zipfile.ZipFile(out) as archive:
+              if archive.testzip() is not None:
+                  raise SystemExit('Packaged skill ZIP is corrupt')
+          if out.stat().st_size > 25 * 1024 * 1024:
+              raise SystemExit('Packaged skill exceeds 25 MB')
+
+          print('GigiLoop v0.3.1 validation passed')
           PY

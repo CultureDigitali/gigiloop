@@ -1,0 +1,31 @@
+{
+  "version": "0.3.1",
+  "source": "OpenAI image generation renders approved by the repository owner",
+  "note": "These JPEG exports preserve the approved visual compositions. CI verifies their exact bytes and dimensions to prevent accidental replacement.",
+  "assets": {
+    "assets/gigiloop-superbanner.jpg": {
+      "sha256": "9042e8b31e7ef514aeb459bcbf2601a791340cf70f3ef1749f83beb9ef50f157",
+      "width": 1200,
+      "height": 400,
+      "role": "README hero and social preview"
+    },
+    "assets/gigiloop-compatibility.jpg": {
+      "sha256": "67f3733445edfd7992cccba30a1eada1463e5a30f8462dc47e0daeae8eb40eae",
+      "width": 1600,
+      "height": 537,
+      "role": "multi-host compatibility artwork"
+    },
+    "assets/gigiloop-logo.jpg": {
+      "sha256": "c07eda5c8557983d757ca48a7988fd3d4b2bb1f80ce8937cd6d27dfa071e5af4",
+      "width": 600,
+      "height": 600,
+      "role": "primary rendered logo"
+    },
+    "gigiloop/assets/gigiloop-logo.jpg": {
+      "sha256": "c07eda5c8557983d757ca48a7988fd3d4b2bb1f80ce8937cd6d27dfa071e5af4",
+      "width": 600,
+      "height": 600,
+      "role": "skill UI icon"
+    }
+  }
+}

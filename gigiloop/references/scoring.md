@@ -1,35 +1,57 @@
-# Scoring and evidence tiers
+# Evidence-tier scoring
 
-Use scores as a compact summary of verified quality, not as a substitute for verification.
+Use evidence tiers to prevent confidence from masquerading as verification.
 
-## Evidence tiers
+## Score anchors
+
+- **0–4:** missing, broken, or materially wrong.
+- **5–6:** partly works, inspection-only, fragile, or substantially incomplete.
+- **7–8:** works for verified paths but lacks important integration, adversarial, or regression evidence.
+- **9:** solid, current, evidence-backed, and free of known defects above nitpick level.
+- **10:** exceptional; all relevant evidence is current, the final gate is clean, and an independent or genuinely fresh-context review found no material issue.
+
+## Evidence tiers and practical ceilings
 
 | Tier | Evidence | Typical ceiling |
 |---|---|---:|
-| T0 | intuition, unsupported self-assessment | 4/10 |
-| T1 | static inspection or reasoning only | 6/10 |
-| T2 | deterministic static checks: lint, typecheck, build, schema validation | 7/10 |
-| T3 | targeted automated tests or a reproducible behavioral check | 8/10 |
-| T4 | T3 + adversarial/edge-case tests + relevant integration verification | 9/10 |
-| T5 | T4 + fresh-context/independent review + clean final gate | 10/10 |
+| **T0** | intuition, unsupported claim, or stale evidence | 4/10 |
+| **T1** | static inspection only | 6/10 |
+| **T2** | deterministic static checks such as lint, typecheck, build | 7/10 |
+| **T3** | targeted automated test or reproducible behavior | 8/10 |
+| **T4** | T3 + adversarial edge cases + relevant integration/regression verification | 9/10 |
+| **T5** | T4 + independent/fresh-context review + clean final gate + integrity checks | 10/10 |
 
-Treat these as ceilings, not automatic scores. A test passing does not imply an 8 if important paths remain untested.
+The ceiling is a constraint, not a target. Weak coverage, known uncertainty, or a material finding may require a lower score even at a high tier.
 
-## Anchors
+## Current-evidence rule
 
-- **0–4:** missing, broken, contradicted by evidence, or not meaningfully verified.
-- **5–6:** partially works or is plausible but fragile, incomplete, or inspection-only.
-- **7:** deterministic checks pass, but behavioral proof is incomplete.
-- **8:** targeted behavior is verified and meaningful regression coverage exists, with material uncertainty remaining.
-- **9:** core and edge behavior is verified, relevant integration risk is covered, and no known material defect remains.
-- **10:** 9-level evidence plus independent/fresh-context review and a clean final gate; no material unresolved uncertainty remains.
+Evidence must identify the code state it verifies. When relevant implementation, tests, snapshots, thresholds, or configuration change:
 
-## Reconciliation rule
+1. mark affected evidence stale;
+2. lower scores that depended on it when necessary;
+3. re-run the smallest sufficient checks;
+4. use only current evidence at the final gate.
 
-The score sheet is provisional until adversarial findings are reconciled.
+## Integrity cap
 
-- A confirmed material finding must reduce the affected score if the prior score is no longer justified.
-- A falsified finding must cite the evidence that disproved it.
-- An untested hypothesis remains uncertainty, not a defect.
+A criterion cannot pass while any of these remains unresolved:
 
-Never change the rubric or evidence threshold merely to make current work pass.
+- verification was weakened to obtain green output;
+- a confirmed regression remains;
+- protected user work was overwritten or entangled without acceptance;
+- a critical acceptance criterion was redefined to fit the implementation;
+- a claimed check was not actually run;
+- a high-severity adversarial finding remains open.
+
+## Weighted score
+
+Track weighted totals for progress, but do not use the average as the completion gate. Every critical criterion must independently pass.
+
+## Reconciliation
+
+After red-team review:
+
+- confirmed findings lower the relevant criterion;
+- falsified findings cite the evidence that rejected them;
+- hypotheses remain uncertainty until tested;
+- post-reconciliation scores become authoritative.

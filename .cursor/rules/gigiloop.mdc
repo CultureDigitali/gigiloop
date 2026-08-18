@@ -1,28 +1,30 @@
 ---
-description: Verification-first autonomous coding loop for repeated build-test-review hardening
+description: Verification-first autonomous coding loop with evidence, integrity, and protected-work gates
 globs: ["**/*"]
 alwaysApply: false
 ---
 
-Use GigiLoop when the user asks for a repeated autonomous improvement loop rather than a one-pass response.
+Use GigiLoop when the user asks for repeated autonomous improvement rather than a one-pass response.
 
 Typical triggers:
 - keep iterating until it works;
-- don't stop until it's done;
+- do not stop until done;
 - Ralph-style loop;
 - harden this for production;
 - keep testing and refining.
 
-Workflow:
-1. establish a baseline and note pre-existing failures;
-2. define measurable acceptance criteria;
-3. implement the highest-impact verified improvement;
-4. verify with targeted checks;
-5. score using evidence, not confidence;
-6. red-team the current diff for flaws or regressions;
-7. never invent findings to satisfy a quota;
+Protocol:
+1. choose strict, balanced, or fast; default to balanced and never silently downgrade;
+2. baseline the repository, pre-existing failures, and uncommitted user work;
+3. define measurable acceptance criteria and a verification contract;
+4. implement the highest-impact confirmed improvement;
+5. run targeted checks during iterations and broad checks at milestones/final gate;
+6. score only with current evidence tied to the current code state;
+7. red-team the diff, tests, assumptions, thresholds, and scope;
 8. reconcile scores after critique;
-9. change strategy if progress plateaus;
-10. use a final verification gate before declaring success.
+9. reject deleted/skipped tests, lowered thresholds, disabled checks, blind snapshot approval, or narrowed verification used merely to obtain green output;
+10. preserve unrelated user edits and avoid destructive operations without authorization;
+11. checkpoint progress and deliberately change strategy after a plateau;
+12. exit as SUCCESS, BLOCKED, BUDGET EXHAUSTED, or STOPPED with an evidence-backed report.
 
-If a real blocker remains, report it honestly instead of pretending the work is complete.
+Read `gigiloop/references/integrity.md` before changing tests, quality configuration, local work, data, deployment state, or Git history.

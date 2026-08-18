@@ -4,6 +4,29 @@ All notable changes to GigiLoop are documented here.
 
 ## [Unreleased]
 
+## v0.3.1
+
+### Fixed
+- Replaced the simplified vector logo/banner interpretation with the approved rendered GigiLoop logo, superbanner, and compatibility artwork.
+- Added an immutable visual manifest with SHA-256 hashes and expected dimensions so approved visuals cannot be silently replaced by a same-named file.
+- Connected the approved logo to `gigiloop/agents/openai.yaml` for skill UI display.
+
+### Added
+- Strict, balanced, and fast operating profiles with explicit quality contracts.
+- Verification-integrity rules that reject deleted/skipped tests, lowered thresholds, disabled checks, blind snapshot updates, and goalpost movement.
+- Protected-work safeguards for pre-existing uncommitted changes and unrelated user edits.
+- Destructive-operation safeguards for resets, cleaning, force-pushes, migrations, deployments, releases, and bulk deletion.
+- Evidence freshness records tied to iteration and repository state.
+- Explicit final statuses and a decision-ready completion report contract.
+- `integrity.md` and `reporting.md` progressive-disclosure references.
+
+### Changed
+- Rebuilt README onboarding around the approved superbanner, compatibility artwork, loop profiles, integrity controls, and one-command installation.
+- Expanded checkpoint state to track profile, protected work, verification contract, integrity findings, and stale evidence.
+- Strengthened CI to validate skill metadata, references, exact visual hashes, dimensions, and icon paths.
+
+## v0.3
+
 ### Added
 - Multi-host compatibility guide covering OpenCode, Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Cline, OpenHands, Amp, and the wider Agent Skills ecosystem.
 - Codex `AGENTS.md`, Gemini CLI `GEMINI.md`, and Cursor `.mdc` convenience adapters.
