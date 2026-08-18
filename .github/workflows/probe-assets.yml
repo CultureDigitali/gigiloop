@@ -55,3 +55,4 @@ jobs:
           name: approved-visual-probe
           path: .probe/*.jpg
           if-no-files-found: error
+          include-hidden-files: true
