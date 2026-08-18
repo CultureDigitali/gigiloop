@@ -49,3 +49,9 @@ jobs:
           for path in sorted(Path('.probe').glob('*.jpg')):
               print(path, jpeg_size(path))
           PY
+      - name: Export inspected visuals
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-visual-probe
+          path: .probe/*.jpg
+          if-no-files-found: error
