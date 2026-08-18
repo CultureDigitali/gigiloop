@@ -1,5 +1,7 @@
 # ⚡ GigiLoop — The Autonomous Skill That Doesn't Quit Until It Earns Its Own 9/10
 
+![GigiLoop banner](assets/banner.svg)
+
 > **Stop babysitting your agent. Set the bar at 9/10, walk away, and come back to work that scored itself, roasted itself, and refused to ship until it was actually good.**
 
 GigiLoop is a **self-adversarial work–test–critique loop** for [opencode](https://opencode.ai). It's the modern, evidence-obsessed successor to `/goal` and `/ralphloop`. You give it a goal. It becomes both the **Builder** and its own ruthless **Adversary**, grinds for minutes or hours, and does not stop until every rubric criterion hits **≥ 9/10** — with receipts.
@@ -46,6 +48,8 @@ Most "just keep improving" prompts are self-praise machines that loop forever an
                            ▼
               FINAL GATE (diff-bounded verify) ──► DONE 🏆
 ```
+
+![GigiLoop cycle](assets/loop.svg)
 
 ---
 

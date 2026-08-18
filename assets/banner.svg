@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="GigiLoop banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0f1f"/>
+      <stop offset="1" stop-color="#160b30"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#1de9ff" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#1de9ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1de9ff"/>
+      <stop offset="0.55" stop-color="#7c5cff"/>
+      <stop offset="1" stop-color="#ff2d75"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd23f"/>
+      <stop offset="1" stop-color="#ff8a00"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bg)"/>
+  <rect width="1200" height="420" fill="url(#glow)"/>
+
+  <!-- grid -->
+  <g stroke="#ffffff" stroke-opacity="0.04" stroke-width="1">
+    <path d="M0 84 H1200 M0 168 H1200 M0 252 H1200 M0 336 H1200"/>
+    <path d="M150 0 V420 M300 0 V420 M450 0 V420 M600 0 V420 M750 0 V420 M900 0 V420 M1050 0 V420"/>
+  </g>
+
+  <!-- logo mark: infinite loop with bolt -->
+  <g transform="translate(250,210)">
+    <circle r="118" fill="#0c1226" stroke="url(#accent)" stroke-width="4"/>
+    <g fill="none" stroke="url(#accent)" stroke-width="9" stroke-linecap="round">
+      <path d="M -52 0 A 52 52 0 1 1 -2 47"/>
+      <path d="M 52 0 A 52 52 0 1 1 2 -47"/>
+    </g>
+    <path d="M 6 -34 L -22 6 L 2 6 L -6 36 L 28 -8 L 4 -8 Z" fill="url(#bolt)"/>
+    <circle r="118" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+  </g>
+
+  <!-- title -->
+  <g transform="translate(430,210)" text-anchor="start">
+    <text y="-58" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="76" font-weight="800" fill="#ffffff" letter-spacing="-1">Gigi<tspan fill="url(#accent)">Loop</tspan></text>
+    <text y="-12" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="500" fill="#9fb2d8">The autonomous self-adversarial work · test · critique loop</text>
+    <g transform="translate(0,28)">
+      <rect x="0" y="0" rx="20" ry="20" width="372" height="46" fill="#0c1226" stroke="url(#accent)" stroke-width="2"/>
+      <text x="20" y="30" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#ffd23f">≥ 9/10</text>
+      <text x="104" y="30" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="500" fill="#cdd8f0">or it doesn't ship</text>
+    </g>
+  </g>
+</svg>
