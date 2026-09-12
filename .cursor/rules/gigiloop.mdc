@@ -1,5 +1,5 @@
 ---
-description: Verification-first autonomous coding loop with evidence, integrity, and protected-work gates
+description: Verification-first autonomous coding loop with resumable state, adversarial review, and local CI fallback
 globs: ["**/*"]
 alwaysApply: false
 ---
@@ -11,20 +11,26 @@ Typical triggers:
 - do not stop until done;
 - Ralph-style loop;
 - harden this for production;
-- keep testing and refining.
+- keep testing and refining;
+- resume after interruption;
+- improve the project after correctness is stable.
 
 Protocol:
 1. choose strict, balanced, or fast; default to balanced and never silently downgrade;
-2. baseline the repository, pre-existing failures, and uncommitted user work;
-3. define measurable acceptance criteria and a verification contract;
-4. implement the highest-impact confirmed improvement;
-5. run targeted checks during iterations and broad checks at milestones/final gate;
-6. score only with current evidence tied to the current code state;
-7. red-team the diff, tests, assumptions, thresholds, and scope;
-8. reconcile scores after critique;
-9. reject deleted/skipped tests, lowered thresholds, disabled checks, blind snapshot approval, or narrowed verification used merely to obtain green output;
-10. preserve unrelated user edits and avoid destructive operations without authorization;
-11. checkpoint progress and deliberately change strategy after a plateau;
-12. exit as SUCCESS, BLOCKED, BUDGET EXHAUSTED, or STOPPED with an evidence-backed report.
+2. baseline the repository, pre-existing failures, verification contract, and uncommitted user work;
+3. use `gigiloop/scripts/gigiloop.py` when Python/shell are available; canonical runtime state is `.gigiloop/checkpoint.json`;
+4. define measurable acceptance criteria;
+5. implement the highest-impact confirmed improvement;
+6. use Builder, Verifier, Red Team, Judge, and optional Improver separation when subagents/fresh contexts are available;
+7. run targeted checks during iterations and broad checks at milestones/final gate;
+8. score only with current evidence tied to the current repository fingerprint;
+9. red-team the diff, tests, assumptions, thresholds, and scope;
+10. reconcile scores after critique;
+11. reject deleted/skipped tests, lowered thresholds, disabled checks, blind snapshot approval, or narrowed verification used merely to obtain green output;
+12. preserve unrelated user edits and avoid destructive operations without authorization;
+13. if GitHub Actions/hosted CI is quota-exhausted or unavailable, continue with equivalent local checks while recording the missing remote evidence;
+14. on resume, reconcile checkpoint and repository fingerprint before reusing evidence;
+15. deliberately change strategy after a plateau;
+16. exit as SUCCESS, BLOCKED, BUDGET EXHAUSTED, or STOPPED with an evidence-backed report.
 
-Read `gigiloop/references/integrity.md` before changing tests, quality configuration, local work, data, deployment state, or Git history.
+Read `gigiloop/references/runtime.md`, `gigiloop/references/orchestration.md`, and `gigiloop/references/integrity.md` when their rules apply.

@@ -1,9 +1,9 @@
 interface:
   display_name: "GigiLoop"
-  short_description: "Verification-first autonomous coding loop"
+  short_description: "Resumable verification-first autonomous coding loop"
   icon_small: "./assets/gigiloop-logo.jpg"
   icon_large: "./assets/gigiloop-logo.jpg"
   brand_color: "#7C5CFF"
-  default_prompt: "Use $gigiloop to keep iterating until every acceptance criterion is verified with current evidence."
+  default_prompt: "Use $gigiloop to keep iterating until every acceptance criterion is verified with current evidence, preserve resumable checkpoint state, and recover safely from interruptions."
 policy:
   allow_implicit_invocation: true
