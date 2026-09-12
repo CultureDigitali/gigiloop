@@ -325,6 +325,8 @@ def cmd_doctor(a) -> int:
 
 def cmd_init(a) -> int:
     root = root_of(a.root)
+    if a.max_iterations < 1:
+        raise SystemExit('--max-iterations must be >= 1')
     path = root / CHECKPOINT
     if path.exists() and not a.force:
         raise SystemExit(f'Checkpoint already exists: {path}')
@@ -372,6 +374,8 @@ def cmd_heartbeat(a) -> int:
 def cmd_checkpoint(a) -> int:
     root = root_of(a.root)
     data = load(root)
+    if a.iteration is not None and a.iteration < 0:
+        raise SystemExit('--iteration must be >= 0')
     if a.iteration is not None:
         data['iteration'] = a.iteration
     elif a.increment:
@@ -435,7 +439,12 @@ def cmd_supervise(a) -> int:
             if a.max_wall_seconds and time.monotonic()-started > a.max_wall_seconds:
                 terminate(proc)
                 return 3
-            current=load(root)
+            try:
+                current=load(root)
+            except SystemExit as exc:
+                terminate(proc)
+                print(f'SUPERVISOR checkpoint failure: {exc}', file=sys.stderr)
+                return 4
             if current['status'] in TERMINAL:
                 terminate(proc)
                 return 0 if current['status']=='success' else 2
