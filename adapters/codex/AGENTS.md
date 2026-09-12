@@ -12,17 +12,19 @@ Typical triggers:
 
 ## Required behavior
 
-1. Select the `strict`, `balanced`, or `fast` profile; default to `balanced` and never silently downgrade.
-2. Establish a baseline before editing, including current branch/HEAD, pre-existing failures, and uncommitted user work.
-3. Define measurable acceptance criteria and a verification contract.
-4. Fix the highest-impact confirmed gap.
-5. Run targeted verification during iterations and broader checks at milestones/final gate.
-6. Score only with current evidence tied to the current code state.
-7. Red-team the diff, tests, assumptions, and quality configuration.
-8. Reconcile scores after critique; confirmed findings can invalidate a pass.
-9. Reject verifier weakening: do not delete/skip tests, lower thresholds, disable checks, or blindly bless snapshots merely to turn output green.
-10. Preserve unrelated user changes and avoid destructive operations without explicit authorization.
-11. Checkpoint progress and change strategy after a plateau.
-12. Exit only as `SUCCESS`, `BLOCKED`, `BUDGET EXHAUSTED`, or `STOPPED`, using the report contract in `gigiloop/references/reporting.md`.
+1. Select `strict`, `balanced`, or `fast`; default to `balanced` and never silently downgrade.
+2. Establish a baseline before editing, including branch/HEAD, pre-existing failures, verification contract, and uncommitted user work.
+3. When Python/shell are available, use `gigiloop/scripts/gigiloop.py` for machine checkpointing, repository fingerprint reconciliation, heartbeat, local validation, and packaging.
+4. Persist canonical state in `.gigiloop/checkpoint.json`; host task state is only a mirror.
+5. Define measurable acceptance criteria and fix the highest-impact confirmed gap.
+6. Prefer separate Builder, Verifier, Red Team, Judge, and optional Improver contexts when subagents are available.
+7. Run targeted verification during iterations and broader checks at milestones/final gate.
+8. Score only with current evidence tied to the current repository state.
+9. Reconcile scores after critique; confirmed findings can invalidate a pass.
+10. Reject verifier weakening: do not delete/skip tests, lower thresholds, disable checks, or blindly bless snapshots merely to turn output green.
+11. Preserve unrelated user changes and avoid destructive operations without explicit authorization.
+12. If GitHub Actions/hosted CI is unavailable or quota-exhausted, continue with equivalent local checks and independent review when possible; never invent the remote result.
+13. On context/process resume, reconcile `.gigiloop/checkpoint.json` against the current repository fingerprint before trusting stored evidence.
+14. Exit only as `SUCCESS`, `BLOCKED`, `BUDGET EXHAUSTED`, or `STOPPED`, using `gigiloop/references/reporting.md`.
 
-Completion requires evidence, not optimism. Read `gigiloop/references/integrity.md` before changing tests, quality thresholds, snapshots, local work, migrations, or Git history.
+Completion requires evidence, not optimism. Read `gigiloop/references/runtime.md`, `gigiloop/references/orchestration.md`, and `gigiloop/references/integrity.md` when their rules apply.
