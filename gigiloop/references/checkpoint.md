@@ -1,102 +1,157 @@
 # Canonical GigiLoop checkpoint
 
-Use `.gigiloop/checkpoint.md` as the authoritative resumable state when the project is writable.
-Keep it compact, current, and sufficient for a fresh agent to resume without relying on conversation memory.
+Use `.gigiloop/checkpoint.json` as the authoritative resumable state when the project is writable.
+Prefer `scripts/gigiloop.py` to create, validate, reconcile, and atomically update it.
 
-## Template
+The runtime checkpoint is intentionally machine-readable so a fresh agent can resume without trusting conversation memory or manually parsing prose.
 
-```yaml
-loop_id: unique-id
-status: active | success | blocked | budget_exhausted | stopped
-iteration: 1
-profile: balanced              # strict | balanced | fast
+## Core schema
 
-goal: one-sentence goal
-scope:
-  included: []
-  excluded: []
-constraints: []
-budget:
-  max_iterations: 25
-  wall_clock: null
-  cost_or_token_limit: null
+The exact schema may gain backward-compatible fields, but these top-level records are required by the v0.4 runtime:
 
-repository:
-  branch: null
-  head_sha: null
-  dirty_before: null
-  current_dirty_state: null
-  diff_fingerprint: null
-  protected_local_changes: []
-  repository_instructions_read: []
+```json
+{
+  "schema_version": 2,
+  "run_id": "uuid",
+  "generation": 1,
+  "status": "active",
+  "iteration": 0,
+  "profile": "balanced",
+  "goal": "one-sentence goal",
+  "scope": {"included": [], "excluded": []},
+  "constraints": [],
+  "budget": {
+    "max_iterations": 25,
+    "wall_clock": null,
+    "cost_or_token_limit": null
+  },
+  "repository": {
+    "mode": "git",
+    "branch": "feature/example",
+    "head_sha": "...",
+    "dirty": true,
+    "untracked": [],
+    "fingerprint": "sha256",
+    "protected_local_changes": [],
+    "instructions_read": []
+  },
+  "verification_contract": {
+    "tests": [],
+    "thresholds": [],
+    "snapshots_or_golden_files": [],
+    "static_checks": [],
+    "manual_acceptance": [],
+    "approved_exceptions": []
+  },
+  "baseline": {
+    "commands": [],
+    "pre_existing_failures": [],
+    "unavailable_checks": []
+  },
+  "rubric": [],
+  "current_evidence": [],
+  "findings": {
+    "confirmed": [],
+    "falsified": [],
+    "hypotheses": []
+  },
+  "integrity": {
+    "verifier_changes": [],
+    "protected_work_conflicts": [],
+    "destructive_operations": [],
+    "integrity_blockers": []
+  },
+  "progress": {
+    "previous_scores": {},
+    "score_delta": null,
+    "flat_iterations": 0,
+    "last_material_change": null
+  },
+  "runtime": {
+    "phase": "intake",
+    "heartbeat_at": "2026-01-01T00:00:00Z",
+    "last_resume_at": "2026-01-01T00:00:00Z",
+    "resume_requires_rebaseline": false,
+    "supervisor_restarts": 0,
+    "last_exit_code": null,
+    "host": null
+  },
+  "next_action": "establish baseline and verification contract",
+  "created_at": "2026-01-01T00:00:00Z",
+  "last_updated": "2026-01-01T00:00:00Z"
+}
+```
 
-verification_contract:
-  tests: []
-  thresholds: []
-  snapshots_or_golden_files: []
-  static_checks: []
-  manual_acceptance: []
-  approved_exceptions: []
+Terminal status values are:
 
-baseline:
-  commands: []
-  pre_existing_failures: []
-  unavailable_checks: []
+- `success`
+- `blocked`
+- `budget_exhausted`
+- `stopped`
 
-rubric:
-  - name: Correctness
-    weight: 40
-    pass_definition: null
-    critical_failure: null
-    max_evidence_tier: T4
-    score: 0
-    evidence: []
-    uncertainty: null
+## Runtime commands
 
-current_evidence:
-  - id: evidence-1
-    iteration: 1
-    code_state: null            # HEAD / diff fingerprint
-    method: null                # command, manual check, code inspection
-    scope: null
-    result: null
-    exit_status: null
-    evidence_tier: T0
-    freshness: current          # current | stale | invalidated
+Create the checkpoint:
 
-findings:
-  confirmed: []
-  falsified: []
-  hypotheses: []
+```bash
+python <skill-path>/scripts/gigiloop.py init --root . --goal "<goal>" --profile balanced
+```
 
-integrity:
-  verifier_changes: []
-  protected_work_conflicts: []
-  destructive_operations: []
-  integrity_blockers: []
+Inspect without rewriting:
 
-progress:
-  previous_scores: {}
-  score_delta: null
-  flat_iterations: 0
-  last_material_change: null
+```bash
+python <skill-path>/scripts/gigiloop.py status --root . --json
+```
 
-next_action: null
-last_updated: null
+Reconcile after resume/context reset/process restart:
+
+```bash
+python <skill-path>/scripts/gigiloop.py resume --root .
+```
+
+Persist iteration/phase/next action:
+
+```bash
+python <skill-path>/scripts/gigiloop.py checkpoint \
+  --root . --increment --phase verify --next-action "run affected integration tests"
 ```
 
 ## Freshness rules
 
-At the start of every resumed turn:
+At every resume:
 
-1. compare branch, HEAD, dirty state, and diff fingerprint;
-2. compare protected local changes and verification contract;
-3. mark evidence stale when relevant code or test configuration changed;
-4. re-run the smallest sufficient checks before reusing stale scores;
-5. resume from `next_action` only after reconciliation.
+1. recompute repository state and fingerprint;
+2. compare it with the checkpoint fingerprint;
+3. if relevant state changed, mark current evidence stale and increment the checkpoint generation;
+4. re-run the smallest sufficient affected checks before reusing scores;
+5. continue from `next_action` only after reconciliation.
+
+The fingerprint includes branch, HEAD, staged and unstaged diffs, and content of untracked files in Git repositories. `.git/**` and `.gigiloop/**` are excluded so runtime writes do not invalidate their own state.
+
+## Atomicity and crash behavior
+
+The runtime writes JSON to a temporary sibling file and then replaces the checkpoint atomically. This avoids a partially written canonical state after a normal process interruption.
+
+A fresh agent must still validate the checkpoint before using it. A malformed, missing, or unsupported schema is a blocker to blind resume; reconstruct the state from repository evidence rather than guessing.
+
+## Heartbeat
+
+`runtime.heartbeat_at` is a liveness signal for optional supervision. Update it at meaningful phase boundaries; do not use it as evidence that verification succeeded.
+
+A stale heartbeat may cause the supervisor to restart a restart-safe agent process. Restart behavior is governed by `references/runtime.md`.
 
 ## Write rules
 
-Rewrite the checkpoint at the end of every iteration and immediately before an intentional stop, user handoff, risky authorized operation, or final report.
+Update the checkpoint:
 
-Do not store secrets, access tokens, personal data, or large raw logs. Store concise references and results.
+- at the end of every material iteration;
+- before an intentional stop or handoff;
+- before/after a risky authorized operation;
+- after repository drift reconciliation;
+- before the final report.
+
+Do not commit `.gigiloop/checkpoint.json`. Do not store secrets, access tokens, personal data, proprietary raw logs, or large command output. Store concise results and references instead.
+
+## Manual fallback
+
+When Python execution is unavailable, maintain an equivalent state file manually and preserve the same fields and freshness rules. State clearly that machine validation/atomic writes were unavailable; do not imply runtime checks occurred.
