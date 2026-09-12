@@ -1,7 +1,10 @@
 # Never commit loop state, secrets, or checkpoints
 .opencode/
+.gigiloop/
 gigiloop/checkpoint.md
 **/checkpoint.md
+**/checkpoint.json
+dist/
 *.log
 .env
 .env.*
