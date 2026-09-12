@@ -5,81 +5,44 @@
 <h1 align="center">GigiLoop</h1>
 
 <p align="center">
-  <strong>The autonomous coding loop that does not trust itself.</strong><br>
+  <strong>The autonomous coding loop that does not trust itself — and can resume after the agent forgets.</strong><br>
   Baseline → Build → Verify → Red-team → Reconcile → Repeat.
 </p>
 
 <p align="center">
   <a href="#quick-start"><strong>Quick start</strong></a> ·
-  <a href="#works-across-agent-hosts">Compatibility</a> ·
-  <a href="COMPATIBILITY.md">Host guide</a> ·
-  <a href="benchmarks/README.md">Benchmarks</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="#v040-resumable-runtime">v0.4 Runtime</a> ·
+  <a href="#multi-agent-adversarial-loop">Multi-agent loop</a> ·
+  <a href="COMPATIBILITY.md">Compatibility</a> ·
+  <a href="benchmarks/README.md">Benchmarks</a>
 </p>
 
-GigiLoop is a **verification-first autonomous coding skill** for OpenCode, Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Cline, OpenHands, Amp, and the wider Agent Skills ecosystem.
+GigiLoop is a **verification-first autonomous coding skill + local runtime** for OpenCode, Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Cline, OpenHands, Amp, and the wider Agent Skills ecosystem.
 
-It turns “keep trying until it works” into a bounded engineering protocol:
+It turns “keep trying until it works” into a bounded engineering protocol that can survive context resets, process exits, stale sessions, repository drift, and exhausted GitHub Actions minutes.
 
-1. baseline the repository and protect existing work;
-2. define measurable acceptance criteria;
-3. fix the highest-impact gap;
-4. verify without weakening the tests;
-5. attack the diff with an adversarial review;
-6. reconcile the scores after critique;
-7. ship only after a final evidence gate.
-
-> **Think Ralph Loop, but with a hostile reviewer, protected user work, and an evidence contract.**
-
-No vibes. No “looks good to me.” **Proof or it does not pass.**
+> **Proof or it does not pass. Checkpoint or it does not resume.**
 
 ---
 
 ## Why GigiLoop exists
 
-Naive autonomous loops fail in predictable ways. GigiLoop builds controls around those failure modes.
+Naive autonomous coding loops fail predictably:
 
-| Naive autonomous loop | GigiLoop |
+| Failure mode | GigiLoop control |
 |---|---|
-| “Rate yourself and keep going” | **Evidence-gated scoring** — tests, command output, reproducible behavior, or precise code references. |
-| Treats every failing test as its own regression | **Baseline awareness** — pre-existing failures are recorded before edits. |
-| Critiques itself, then ignores the critique | **Score reconciliation** — confirmed findings can lower a previously passing score. |
-| Deletes or relaxes tests to turn CI green | **Verification integrity** — weakening the verifier blocks completion. |
-| Overwrites unrelated local work | **Protected-work guard** — pre-existing edits are tracked and re-checked. |
-| Invents problems to satisfy a quota | **Evidence-gated red-team** — up to three material findings; never fabricate one. |
-| Uses the same context to approve its own work | **Independent reviewer when available** — fresh-context or subagent review is preferred. |
-| Re-runs an expensive full suite after every tiny edit | **Progressive verification** — fast affected checks while iterating, broad checks at milestones and the final gate. |
-| Loops forever on a plateau | **Plateau → re-strategy** — repeated flat progress forces a genuinely different approach. |
-| Resumes from stale memory after the repo changed | **Checkpoint validation** — stale evidence is invalidated when repository state changes. |
-| Averages strong criteria over weak ones | **All-criteria gate** — every critical criterion must clear the requested threshold. |
-| Never admits defeat | **Honest exit** — blockers and budgets produce reports instead of fabricated success. |
-
----
-
-## Works across agent hosts
-
-<p align="center">
-  <img src="assets/gigiloop-compatibility.jpg" alt="GigiLoop compatibility with OpenCode, Claude Code, Codex, Cursor, and Gemini CLI" width="100%" />
-</p>
-
-The canonical [`gigiloop/SKILL.md`](gigiloop/SKILL.md) is host-neutral. Small adapters are included where a native workflow file improves discovery or usability.
-
-| Host | Install target | Support |
-|---|---|---|
-| **OpenCode** | `opencode` | ✅ Native Agent Skill |
-| **Claude Code** | `claude-code` | ✅ Native Agent Skill |
-| **Codex** | `codex` | ✅ Native + `AGENTS.md` adapter |
-| **Cursor** | `cursor` | ✅ Native + optional `.mdc` rule |
-| **Gemini CLI** | `gemini-cli` | ✅ Native + `GEMINI.md` adapter |
-| **GitHub Copilot** | `github-copilot` | ✅ Agent Skill |
-| **Cline** | `cline` | ✅ Agent Skill |
-| **OpenHands** | `openhands` | ✅ Agent Skill |
-| **Amp** | `amp` | ✅ Agent Skill |
-| **Many more** | interactive detection | ✅ Agent Skills ecosystem |
-
-See [`COMPATIBILITY.md`](COMPATIBILITY.md) for paths, adapters, and portability rules.
-
-Compatibility is descriptive and does not imply vendor endorsement. See [`assets/BRANDING.md`](assets/BRANDING.md) for visual and trademark guidance.
+| “Rate yourself and keep going” | **Evidence-gated scoring** tied to actual tests, commands, behavior, or code state. |
+| Treat every red test as a new regression | **Baseline awareness** separates pre-existing failures. |
+| Critique yourself, then ignore it | **Mandatory reconciliation** after adversarial review. |
+| Delete/relax tests to obtain green output | **Verification-integrity contract** blocks fake passes. |
+| Overwrite unrelated user work | **Protected-work guard** records and re-checks local changes. |
+| Loop forever without progress | **Plateau detection** forces re-strategy. |
+| Lose state after context reset | **Atomic machine checkpoint** in `.gigiloop/checkpoint.json`. |
+| Trust stale evidence after files changed | **Repository fingerprint reconciliation** invalidates stale evidence. |
+| Stop when the coding agent goes idle | **Heartbeat + optional supervisor** can restart restart-safe CLI agents. |
+| Depend on GitHub Actions to keep working | **Local-first validation** continues when hosted CI quota is exhausted. |
+| One agent writes, tests, and approves itself | **Builder / Verifier / Red Team / Judge** separation when subagents exist. |
+| “Improve it” becomes endless scope creep | **Measured Improver pass** only after correctness is stable. |
 
 ---
 
@@ -91,7 +54,7 @@ Compatibility is descriptive and does not imply vendor endorsement. See [`assets
 npx skills add CultureDigitali/gigiloop --skill gigiloop
 ```
 
-Choose a detected agent interactively, or target one explicitly:
+Target a host explicitly when useful:
 
 ```bash
 npx skills add CultureDigitali/gigiloop --skill gigiloop -a opencode
@@ -101,20 +64,20 @@ npx skills add CultureDigitali/gigiloop --skill gigiloop -a cursor
 npx skills add CultureDigitali/gigiloop --skill gigiloop -a gemini-cli
 ```
 
-Add `-g` for a global/user-level installation. Use `--agent '*'` to install to all detected supported targets.
+Add `-g` for global/user installation. Use `--agent '*'` for all detected supported targets.
 
-### Give it a concrete goal
+### Give the agent a measurable goal
 
 ```text
-gigiloop: fix the login regression and harden the auth flow until every acceptance criterion is verified at 9/10
+gigiloop: fix the login regression and keep iterating until every critical criterion is verified at 9/10
 ```
 
 ```text
-gigiloop: build an idempotent payments endpoint with tests; do not stop at the happy path
+gigiloop: build an idempotent payments endpoint; use strict mode and do not stop at the happy path
 ```
 
 ```text
-gigiloop: keep iterating until the failing CI job is fixed without weakening or skipping any checks
+gigiloop: harden this project, then run one self-improvement pass and keep only improvements that survive verification and red-team review
 ```
 
 Natural constraints work too:
@@ -129,21 +92,145 @@ preserve my current uncommitted edits
 
 ---
 
-## Choose the loop profile
+## v0.4.0: resumable runtime
 
-GigiLoop adapts verification depth without changing its core integrity rules.
+The skill now ships a single-file, standard-library Python runtime:
 
-| Profile | Best for | Quality contract |
-|---|---|---|
-| **strict** | authentication, payments, security, migrations, production incidents, public APIs | regression test + integration checks + independent review when available + full final gate |
-| **balanced** | ordinary features, refactors, and bug fixes | targeted iteration checks + milestone regression checks + adversarial review + full relevant final gate |
-| **fast** | explicit budget or low-risk exploration | baseline + meaningful reproducible check + reconciliation + strongest final checks allowed by the budget |
+```text
+gigiloop/scripts/gigiloop.py
+```
 
-Default: **balanced**. High-consequence work automatically escalates toward **strict**. GigiLoop never silently downgrades the requested profile.
+No third-party Python package is required.
+
+### Inspect host capability
+
+```bash
+python <skill-path>/scripts/gigiloop.py doctor --root .
+```
+
+### Start a resumable loop
+
+```bash
+python <skill-path>/scripts/gigiloop.py init \
+  --root . \
+  --goal "fix the login regression" \
+  --profile balanced
+```
+
+This creates:
+
+```text
+.gigiloop/checkpoint.json
+```
+
+The checkpoint is deliberately ignored by Git and records the run ID, generation, profile, iteration, budget, repository fingerprint, evidence, findings, integrity state, phase, heartbeat, restart counters, and exact next action.
+
+### Resume after a crash/context reset
+
+```bash
+python <skill-path>/scripts/gigiloop.py resume --root .
+```
+
+If repository state changed after the checkpoint, GigiLoop marks affected evidence stale instead of trusting yesterday’s score.
+
+### Record heartbeat / phase
+
+```bash
+python <skill-path>/scripts/gigiloop.py heartbeat --root . --phase verify --message "running auth suite"
+```
+
+### Advance state atomically
+
+```bash
+python <skill-path>/scripts/gigiloop.py checkpoint \
+  --root . \
+  --increment \
+  --phase work \
+  --next-action "fix retry idempotency"
+```
+
+### Supervise a restart-safe CLI agent
+
+```bash
+python <skill-path>/scripts/gigiloop.py supervise \
+  --root . \
+  --idle-seconds 900 \
+  --max-restarts 10 \
+  -- your-agent-command --resume-from .gigiloop/checkpoint.json
+```
+
+The supervisor watches the heartbeat, restarts after unexpected exit or stale heartbeat, and respects restart/wall-clock budgets.
+
+**Important:** supervision only applies to commands that are safe to restart. It does not make destructive migrations, production deployments, payments, or other non-idempotent operations safe.
+
+See [`gigiloop/references/runtime.md`](gigiloop/references/runtime.md).
 
 ---
 
-## The loop
+## GitHub Actions minutes exhausted? Keep working.
+
+GigiLoop v0.4 explicitly treats hosted CI as **evidence**, not the persistence layer.
+
+When GitHub Actions is exhausted/unavailable:
+
+1. preserve `.gigiloop/checkpoint.json`;
+2. run GigiLoop runtime self-test and validator locally;
+3. run the project’s tests/lint/typecheck/build/security/integration checks locally;
+4. use independent subagent review when available;
+5. continue the loop;
+6. retry hosted CI when available or when branch protection/release policy truly requires it.
+
+Local development must not freeze merely because GitHub minutes ran out.
+
+If repository policy explicitly requires a hosted status check for merge/release, GigiLoop never fabricates that result: it continues locally and reports the remote gate as `BLOCKED` only when it becomes the actual blocker.
+
+---
+
+## Multi-agent adversarial loop
+
+When the host supports subagents/fresh contexts, GigiLoop maps work into five roles:
+
+| Role | Responsibility | Forbidden shortcut |
+|---|---|---|
+| **Builder** | implement highest-impact gap | approve its own work |
+| **Verifier** | reproduce behavior and run checks | change production code just to obtain green output |
+| **Red Team** | attack assumptions, diff, edge cases, integrity | invent findings to satisfy a quota |
+| **Judge** | reconcile evidence and choose next action | implement fixes in the same decision pass |
+| **Improver** | propose measurable improvements after correctness | expand scope without measurable expected value |
+
+A normal iteration becomes:
+
+```text
+Builder → Verifier → Score → Red Team → Judge → Checkpoint
+                                              ↓
+                                         next action
+```
+
+A self-improvement iteration runs only after the primary goal already passes:
+
+```text
+Judge → Improver hypothesis → Builder → Verifier → Red Team → Judge
+```
+
+If the host has no subagents, GigiLoop keeps the same logical roles sequentially. It does **not** pretend that same-context role-play is independent review.
+
+See [`gigiloop/references/orchestration.md`](gigiloop/references/orchestration.md).
+
+---
+
+## Operating profiles
+
+| Profile | Best for | Quality contract |
+|---|---|---|
+| **strict** | auth, payments, security, migrations, production incidents, public APIs | regression test + integration checks + independent review when available + full final gate |
+| **balanced** | ordinary features, refactors, bug fixes | targeted checks + milestone checks + adversarial review + full relevant final gate |
+| **fast** | explicit budget or low-risk exploration | baseline + meaningful reproducible check + reconciliation + strongest final checks allowed by budget |
+
+Default: **balanced**. High-consequence work escalates toward **strict**. GigiLoop never silently downgrades the requested profile.
+
+---
+
+## The core loop
 
 ```text
 GOAL + PROFILE + BASELINE + RUBRIC
@@ -176,84 +263,117 @@ GOAL + PROFILE + BASELINE + RUBRIC
 
 ---
 
+## Repository fingerprint and evidence freshness
+
+For Git repositories, the v0.4 fingerprint includes:
+
+- current branch;
+- HEAD SHA;
+- staged diff;
+- unstaged diff;
+- untracked path names **and file contents**.
+
+`.git/**` and `.gigiloop/**` are intentionally excluded so writing a checkpoint cannot invalidate its own evidence.
+
+A fingerprint change does not automatically mean “regression”; it means the old evidence may no longer apply. `resume` marks previous current evidence stale and forces re-baselining of affected checks.
+
+---
+
 ## Verification integrity
 
-A green check is not valid when the agent changed the rules merely to obtain it.
+A green check is invalid if the agent changed the rules merely to obtain it.
 
-GigiLoop explicitly guards against:
+GigiLoop rejects:
 
 - deleted, skipped, quarantined, or weakened tests;
-- reduced assertions or over-mocked behavior;
-- lowered coverage, lint, type, performance, or security thresholds;
-- disabled hooks, workflows, compiler flags, or strict mode;
-- blindly updated snapshots or golden files;
-- acceptance criteria changed after seeing the implementation;
-- hidden failures, swallowed errors, or narrowed verification scope;
-- destructive Git/data operations without authorization;
-- overwritten or entangled pre-existing user edits.
+- reduced assertions or excessive mocking;
+- lowered coverage/lint/type/performance/security thresholds;
+- disabled workflows, hooks, compiler flags, or strict mode;
+- blindly updated snapshots/golden files;
+- acceptance criteria changed after implementation;
+- hidden/swallowed failures;
+- unauthorized destructive Git/data operations;
+- overwritten unrelated user work.
 
-A genuinely incorrect test may be changed only with evidence, replacement verification, and a documented explanation. See [`gigiloop/references/integrity.md`](gigiloop/references/integrity.md).
+See [`gigiloop/references/integrity.md`](gigiloop/references/integrity.md).
 
 ---
 
 ## Evidence tiers
 
-A strong score requires proportionally strong, current evidence.
-
 | Tier | Typical evidence | Practical ceiling |
 |---|---|---:|
-| **T0** | intuition, unsupported claim, or stale evidence | 4/10 |
+| **T0** | intuition, unsupported claim, stale evidence | 4/10 |
 | **T1** | static inspection only | 6/10 |
-| **T2** | lint, typecheck, build, deterministic static checks | 7/10 |
+| **T2** | lint/typecheck/build/static deterministic checks | 7/10 |
 | **T3** | targeted automated tests or reproducible behavior | 8/10 |
-| **T4** | tests + adversarial edge cases + relevant integration verification | 9/10 |
-| **T5** | T4 + independent/fresh-context review + clean final and integrity gates | 10/10 |
+| **T4** | T3 + adversarial edge cases + integration/regression verification | 9/10 |
+| **T5** | T4 + independent/fresh review + clean final/integrity gates | 10/10 |
 
-Evidence is tied to a code state. A relevant edit invalidates stale evidence before the score can be reused.
+Strong confidence never upgrades weak evidence.
 
 See [`gigiloop/references/scoring.md`](gigiloop/references/scoring.md).
 
 ---
 
-## Resumable without trusting stale state
+## Local validator = CI validator
 
-When the project is writable, GigiLoop uses `.gigiloop/checkpoint.md` to track:
+The repository no longer embeds a second validator implementation in the GitHub workflow.
 
-- goal, scope, profile, constraints, and budget;
-- branch, HEAD, dirty state, and protected local changes;
-- verification contract and baseline failures;
-- rubric, scores, evidence tiers, and evidence freshness;
-- confirmed findings, hypotheses, and integrity exceptions;
-- iteration count and next action.
+Run exactly what CI runs:
 
-When the repository changes outside the loop, affected evidence is invalidated before resuming. See [`gigiloop/references/checkpoint.md`](gigiloop/references/checkpoint.md).
+```bash
+python gigiloop/scripts/gigiloop.py self-test
+python gigiloop/scripts/gigiloop.py validate-repo
+python gigiloop/scripts/gigiloop.py pack --output dist/skill.zip
+```
+
+Packaging normalizes ZIP timestamps, so an unchanged skill tree should produce byte-identical `skill.zip` files.
+
+CI additionally packages the exact repository revision and uploads both artifacts.
 
 ---
 
 ## Exit report
 
-GigiLoop exits with one explicit status:
+Every loop exits explicitly as one of:
 
 - `SUCCESS`
 - `BLOCKED`
 - `BUDGET EXHAUSTED`
 - `STOPPED`
 
-The report distinguishes what was **verified**, **inferred**, **unverified**, and **blocked**, and includes the scorecard, commands/checks, integrity state, remaining risks, and next action. See [`gigiloop/references/reporting.md`](gigiloop/references/reporting.md).
+The report distinguishes verified, inferred, unverified, and blocked claims and includes scorecard, commands/checks, integrity state, remaining risks, and next action.
+
+See [`gigiloop/references/reporting.md`](gigiloop/references/reporting.md).
 
 ---
 
-## Benchmarks: prove it, do not market fiction
+## Works across agent hosts
 
-GigiLoop does **not** publish invented success rates. [`benchmarks/README.md`](benchmarks/README.md) defines a reproducible comparison protocol for:
+<p align="center">
+  <img src="assets/gigiloop-compatibility.jpg" alt="GigiLoop compatibility with OpenCode, Claude Code, Codex, Cursor, and Gemini CLI" width="100%" />
+</p>
+
+The canonical skill is host-neutral. Small adapters improve discovery without redefining behavior.
+
+See [`COMPATIBILITY.md`](COMPATIBILITY.md) and [`gigiloop/references/hosts.md`](gigiloop/references/hosts.md).
+
+Compatibility is descriptive and does not imply vendor endorsement.
+
+---
+
+## Benchmarks
+
+GigiLoop does **not** publish invented success rates.
+
+[`benchmarks/README.md`](benchmarks/README.md) defines reproducible comparisons between:
 
 - a normal one-pass coding agent;
-- a naive keep-going / Ralph-style loop;
-- GigiLoop;
+- a naive keep-going/Ralph-style loop;
+- GigiLoop.
 
-from the same starting commit, under comparable model/host budgets and independent or hidden checks where practical.
-
-Measured claims belong in the README only when raw evidence can reconstruct them.
+Measured claims belong in public documentation only when raw evidence can reconstruct them.
 
 ---
 
@@ -267,27 +387,23 @@ Measured claims belong in the README only when raw evidence can reconstruct them
 ├── CONTRIBUTING.md
 ├── SECURITY.md
 ├── assets/
-│   ├── gigiloop-logo.jpg
-│   ├── gigiloop-superbanner.jpg
-│   ├── gigiloop-compatibility.jpg
-│   ├── visual-manifest.json
-│   ├── loop.svg
-│   └── BRANDING.md
 ├── adapters/
-│   ├── codex/AGENTS.md
-│   └── gemini-cli/GEMINI.md
-├── .cursor/rules/gigiloop.mdc
-├── benchmarks/README.md
-├── marketing/
+├── benchmarks/
 └── gigiloop/
     ├── SKILL.md
-    ├── assets/gigiloop-logo.jpg
-    ├── agents/openai.yaml
+    ├── scripts/
+    │   └── gigiloop.py
+    ├── agents/
+    │   └── openai.yaml
+    ├── assets/
+    │   └── gigiloop-logo.jpg
     └── references/
         ├── checkpoint.md
         ├── hosts.md
         ├── integrity.md
+        ├── orchestration.md
         ├── reporting.md
+        ├── runtime.md
         ├── scoring.md
         └── verification.md
 ```
@@ -296,17 +412,9 @@ Measured claims belong in the README only when raw evidence can reconstruct them
 
 ## Contributing
 
-Reproducible benchmark cases, failure reports, portability fixes, host adapters, and reviewer strategies are especially useful. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+High-value contributions include reproducible failure cases, resume/checkpoint bugs, false positive/negative red-team findings, host adapters, verifier-integrity attacks, supervisor edge cases, and benchmark cases where GigiLoop loses.
 
-If GigiLoop catches something a normal coding pass would have shipped, open a benchmark case with the evidence.
-
----
-
-## 📣 Share
-
-Ready-to-post launch drafts for free developer channels live in [`marketing/`](marketing/), including Show HN, Reddit, X, LinkedIn, Product Hunt, Lobsters, and the self-case-study.
-
-Discussion: [github.com/CultureDigitali/gigiloop/discussions](https://github.com/CultureDigitali/gigiloop/discussions)
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 
@@ -316,4 +424,4 @@ MIT. Third-party names and marks remain property of their respective owners and 
 
 ---
 
-⭐ **If GigiLoop improves a real result, star the repository and share the reproducible case. Evidence is more useful than hype.**
+⭐ If GigiLoop improves a real result, share the reproducible case. Evidence is more useful than hype.
