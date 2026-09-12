@@ -4,6 +4,35 @@ All notable changes to GigiLoop are documented here.
 
 ## [Unreleased]
 
+## v0.4.0
+
+### Added
+- Standard-library local runtime in `gigiloop/scripts/gigiloop.py` with `doctor`, `init`, `status`, `resume`, `heartbeat`, `checkpoint`, `supervise`, `self-test`, `validate-repo`, and deterministic `pack` commands.
+- Machine-readable `.gigiloop/checkpoint.json` with atomic writes, run IDs, schema versioning, runtime phase, heartbeat, restart state, and repository fingerprint reconciliation.
+- Content-sensitive repository fingerprints that include branch/HEAD, staged/unstaged changes, and untracked file contents while excluding GigiLoop's own runtime state.
+- Recovery protocol for context resets, crashes, process exits, stale heartbeats, and externally changed repositories.
+- Optional supervisor for restart-safe CLI agents with idle detection, restart budget, backoff, and wall-clock budget.
+- Explicit local-first fallback when GitHub Actions or other hosted CI is unavailable, quota-exhausted, delayed, or infrastructure-failing.
+- Adversarial multi-agent orchestration contract: Builder, Verifier, Red Team, Judge, and optional Improver.
+- Controlled self-improvement pass after primary correctness is stable, with measurable benefit/risk/verification requirements.
+- Deterministic skill packaging with normalized ZIP timestamps and byte-for-byte reproducibility checks.
+
+### Changed
+- Canonical persistent state moved from prose `.gigiloop/checkpoint.md` to machine-readable `.gigiloop/checkpoint.json`.
+- GitHub Actions now calls the same runtime self-test, validator, and packager used locally instead of carrying a second embedded validator implementation.
+- Hosted CI is treated as an accelerator/evidence source rather than the sole mechanism for preserving loop progress.
+- GigiLoop's canonical control plane now includes explicit idle/crash recovery, CI quota fallback, role separation, and optional self-improvement.
+- `.gitignore` now excludes the whole `.gigiloop/` runtime state directory and local `dist/` packages.
+
+### Fixed
+- Fixed checkpoint self-invalidation risk by excluding `.gigiloop/**` from repository fingerprints.
+- Fixed stale-evidence reuse after external repository changes by marking prior current evidence stale during resume reconciliation.
+- Fixed untracked-file blind spots by hashing both untracked path names and file contents.
+- Fixed partial-checkpoint corruption risk by writing runtime state atomically.
+- Fixed CI/runtime drift by consolidating validation logic into one executable implementation.
+- Removed the hardcoded `v0.3.1` success string from validation output.
+- Added explicit behavior for exhausted GitHub Actions minutes/quota so autonomous work can continue locally until a truly required remote merge/release gate is reached.
+
 ## v0.3.1
 
 ### Fixed
