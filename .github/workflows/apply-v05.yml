@@ -5,7 +5,7 @@ on:
     branches:
       - feat/v0.4.0-verifiable-runtime
     paths:
-      - 'staging/v05/trigger.txt'
+      - 'staging/v05/trigger2.txt'
 
 permissions:
   contents: write
@@ -41,11 +41,10 @@ jobs:
           if section not in text:
               if marker not in text:
                   raise SystemExit('CHANGELOG marker not found')
-              text = text.replace(marker, marker + '\n\n' + section, 1)
-              changelog.write_text(text, encoding='utf-8')
+              changelog.write_text(text.replace(marker, marker + '\n\n' + section, 1), encoding='utf-8')
           PY
 
-      - name: Verify exact v0.5 candidate before commit
+      - name: Verify exact v0.5 candidate
         run: |
           test "$(sha256sum gigiloop/scripts/gigiloop.py | cut -d' ' -f1)" = '47a644e19e6e3c091108efd21f5f1c648b5e64c3f66840fccc8df22ef79d3365'
           test "$(sha256sum tests/test_runtime.py | cut -d' ' -f1)" = 'bcb4382cc279d3156c03b8fcd15440d473208a5d0276d2e0ddd970991f29bd37'
@@ -55,13 +54,14 @@ jobs:
           python gigiloop/scripts/gigiloop.py validate-repo
           python gigiloop/scripts/gigiloop.py pack --output /tmp/skill.zip
 
-      - name: Commit verified candidate and remove staging machinery
+      - name: Commit production candidate
         run: |
           rm -f V05_CHANGELOG.md
           rm -rf staging/v05
-          rm -f .github/workflows/apply-v05.yml
+          rm -rf gigiloop/scripts/__pycache__ tests/__pycache__
+          git checkout -- .github/workflows/validate-skill.yml .github/workflows/apply-v05.yml
           git config user.name 'Culture Digitali GigiLoop Bot'
           git config user.email '124262825+CultureDigitali@users.noreply.github.com'
-          git add -A
+          git add CHANGELOG.md gigiloop/SKILL.md gigiloop/references/runtime.md gigiloop/scripts/gigiloop.py tests/test_runtime.py staging/v05
           git commit -m 'GigiLoop v0.5.0: harden runtime and local verification'
           git push origin HEAD:feat/v0.4.0-verifiable-runtime
