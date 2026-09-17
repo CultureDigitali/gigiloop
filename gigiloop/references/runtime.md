@@ -38,7 +38,7 @@ The canonical machine-readable checkpoint is:
 
 `checkpoint.json` is runtime state and must not be committed. Human-readable reports may summarize it, but they do not replace it.
 
-The runtime writes checkpoints atomically using a temporary file followed by `os.replace`, so a process interruption should not leave a partially written JSON document.
+The runtime writes checkpoints atomically using a unique same-directory temporary file followed by `os.replace`. Read-modify-write mutations are serialized with `.gigiloop/checkpoint.lock`, so concurrent heartbeat/checkpoint/supervisor updates do not silently overwrite each other. Stale locks are recoverable after a bounded interval.
 
 The checkpoint records:
 
@@ -59,7 +59,10 @@ For Git repositories it includes:
 - branch and HEAD;
 - staged diff;
 - unstaged diff;
-- names and contents of untracked files.
+- names and contents of untracked files;
+- symlink targets as link metadata without dereferencing the external target.
+
+Git output is decoded with surrogate escaping so unusual non-UTF-8 filenames cannot crash fingerprinting on POSIX filesystems.
 
 `.git/**` and `.gigiloop/**` are excluded so checkpoint writes do not invalidate their own evidence.
 
@@ -141,6 +144,23 @@ Use this hierarchy when GitHub Actions or another hosted CI system is unavailabl
 4. **Hosted CI** — add its result when available; do not block ordinary progress solely because minutes/quota are exhausted unless the user or repository policy explicitly requires that remote check.
 
 If branch protection or release policy explicitly requires hosted CI, local checks can support progress but cannot replace that external merge/release gate. Report `BLOCKED` only at the point that the unavailable remote gate actually prevents the requested outcome.
+
+## Recorded local verification
+
+Use `verify` to execute explicit project checks and persist evidence in the checkpoint:
+
+```bash
+python <skill-path>/scripts/gigiloop.py verify \
+  --root . \
+  --kind targeted \
+  --tier T3 \
+  --check "pytest -q" \
+  --check "python -m compileall src"
+```
+
+Each check records command, exit status, evidence tier, classification, repository fingerprint, timestamps, and a bounded output tail. If any check mutates the repository, all evidence from that verification batch is marked `stale` and the command exits with code `2` (`VERIFY_REBASELINE_REQUIRED`). A failing check exits `1`; a clean current batch exits `0`.
+
+Supervisor termination is process-tree aware: POSIX workers run in their own session/process group, and restarts terminate descendants before relaunching. Restart-budget or wall-clock exhaustion writes terminal `budget_exhausted` state instead of leaving the checkpoint falsely `active`.
 
 ## Runtime validation commands
 

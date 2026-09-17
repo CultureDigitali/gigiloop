@@ -4,6 +4,30 @@ All notable changes to GigiLoop are documented here.
 
 ## [Unreleased]
 
+## v0.5.0
+
+### Added
+- First-class `verify` runtime command that executes explicit local checks, records reproducible evidence against the current repository fingerprint, and returns distinct exit codes for pass, failure, and repository drift.
+- Cross-process checkpoint mutation lock with stale-lock recovery to serialize heartbeat, checkpoint, resume, supervisor, and evidence updates.
+- Dedicated runtime regression suite covering checkpoint races, supervisor budgets, process trees, packaging permissions, symlinks, non-UTF-8 filenames, and verification evidence freshness.
+
+### Changed
+- Supervisor processes now run in an isolated process group/session where supported and terminate descendants before restart or exit.
+- Deterministic packaging preserves executable permission bits for the runtime and rejects symlinks instead of silently dereferencing them into the skill archive.
+- Git command output uses surrogate-escape decoding so unusual filenames cannot crash repository fingerprinting on POSIX systems.
+- CI now compiles the runtime, executes the regression suite, validates repository invariants, verifies deterministic packaging, and checks that the packaged CLI remains executable.
+
+### Fixed
+- Fixed concurrent atomic writers colliding on the same `.tmp` checkpoint path.
+- Fixed lost-update races between heartbeat/checkpoint/supervisor processes.
+- Fixed supervisor wall-clock and restart-budget exhaustion leaving the checkpoint incorrectly `active`.
+- Fixed terminal `success` being overwritten by a late supervisor budget event.
+- Fixed child processes surviving supervisor restarts after the direct parent exits.
+- Fixed repository fingerprints dereferencing external symlinks and changing when external target contents changed.
+- Fixed non-UTF-8 untracked filenames crashing Git output decoding.
+- Fixed deterministic ZIP packaging stripping executable bits from `gigiloop/scripts/gigiloop.py`.
+- Fixed verification evidence being treated as current when the verification command itself changed repository state.
+
 ## v0.4.0
 
 ### Added
