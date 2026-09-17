@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'gigiloop/**'
+      - 'tests/**'
       - 'adapters/**'
       - '.cursor/rules/gigiloop.mdc'
       - 'COMPATIBILITY.md'
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - 'gigiloop/**'
+      - 'tests/**'
       - 'adapters/**'
       - '.cursor/rules/gigiloop.mdc'
       - 'COMPATIBILITY.md'
@@ -43,8 +45,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Compile runtime
+        run: python -m py_compile gigiloop/scripts/gigiloop.py
+
       - name: Runtime self-test
         run: python gigiloop/scripts/gigiloop.py self-test
+
+      - name: Runtime regression suite
+        run: python -m unittest discover -s tests -v
 
       - name: Validate repository and skill invariants
         run: python gigiloop/scripts/gigiloop.py validate-repo
@@ -52,11 +60,18 @@ jobs:
       - name: Build deterministic skill package
         run: python gigiloop/scripts/gigiloop.py pack --output dist/skill.zip
 
-      - name: Verify deterministic packaging
+      - name: Verify deterministic packaging and executable runtime bit
         run: |
           cp dist/skill.zip /tmp/skill-first.zip
           python gigiloop/scripts/gigiloop.py pack --output dist/skill.zip
           cmp /tmp/skill-first.zip dist/skill.zip
+          python - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('dist/skill.zip') as z:
+              info = z.getinfo('gigiloop/scripts/gigiloop.py')
+              mode = (info.external_attr >> 16) & 0o777
+              assert mode & 0o111, oct(mode)
+          PY
           sha256sum dist/skill.zip
 
       - name: Archive exact source revision

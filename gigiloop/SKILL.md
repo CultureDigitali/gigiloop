@@ -51,6 +51,14 @@ Create machine-readable state for a new loop:
 python <skill-path>/scripts/gigiloop.py init --root . --goal "<goal>" --profile balanced
 ```
 
+Run local verification through the runtime when command execution is available so evidence is recorded against the exact repository fingerprint:
+
+```bash
+python <skill-path>/scripts/gigiloop.py verify --root . --kind targeted --tier T3 --check "pytest -q"
+```
+
+If a verification command changes the repository, the runtime marks that evidence stale and requires re-baselining instead of accepting the result as current proof.
+
 At a resumed session or process restart:
 
 ```bash
