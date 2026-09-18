@@ -71,6 +71,18 @@ If code execution is unavailable, follow the same contract manually using the ch
 
 Read `references/runtime.md` for supervisor, heartbeat, local-CI fallback, and recovery rules.
 
+### Optional durable worker coordination
+
+When the host supports subagents, persistent sessions, or long-running orchestration, initialize the provider-neutral coordination layer after the main checkpoint:
+
+```bash
+python <skill-path>/scripts/coordination.py init --root . --max-active-workers 2
+```
+
+Use it to preserve stable worker IDs, reuse sleeping workers, queue follow-up work with lease/receipt semantics, create deterministic worker finish boundaries, and write compact context handoffs. Coordination state lives in `.gigiloop/coordination.json` and is bound to the main checkpoint `run_id`.
+
+Do not treat a message receipt as verification evidence. Code/test evidence remains in the main checkpoint. Read `references/coordination.md` before integrating host workers or persistent sessions.
+
 ## Choose an operating profile
 
 Select the profile from user instructions and risk. Record it. Never silently downgrade it.
@@ -305,3 +317,4 @@ Do not expose hidden chain-of-thought. Report actions, evidence, scores, blocker
 - `references/hosts.md` — host-neutral portability and fallback rules.
 - `references/runtime.md` — deterministic runtime, heartbeat, supervision, CI fallback, recovery.
 - `references/orchestration.md` — Builder/Verifier/Red Team/Judge/Improver role protocol.
+- `references/coordination.md` — durable worker identity, leased inbox, finish boundary, sleeping reuse, and compact handoff protocol.
