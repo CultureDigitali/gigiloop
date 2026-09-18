@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -61,6 +62,8 @@ class RemoteTests(unittest.TestCase):
         self.assertTrue(remote.repo_matches("https://github.com/CultureDigitali/gigipec.git", "CultureDigitali/gigipec"))
         self.assertTrue(remote.repo_matches("git@github.com:CultureDigitali/gigipec.git", "CultureDigitali/gigipec"))
         self.assertFalse(remote.repo_matches("https://github.com/evil/gigipec.git", "CultureDigitali/gigipec"))
+        self.assertFalse(remote.repo_matches("https://evil.example/CultureDigitali/gigipec.git", "CultureDigitali/gigipec"))
+        self.assertFalse(remote.repo_matches("https://evil.example/github.com/CultureDigitali/gigipec.git", "CultureDigitali/gigipec"))
 
     def test_unallowlisted_author_rejected_first(self):
         with tempfile.TemporaryDirectory() as td:
@@ -83,6 +86,42 @@ class RemoteTests(unittest.TestCase):
             issue = {"number": 1, "author": {"login": "CultureDigitali"}, "body": json.dumps(self.envelope())}
             result, detail, _ = remote.process(cfg, state, issue)
             self.assertEqual(result, "duplicate"); self.assertEqual(detail, "success")
+
+    def test_active_controller_lock_rejects_second_daemon(self):
+        with tempfile.TemporaryDirectory() as td:
+            state = Path(td) / "state.json"
+            lock = state.with_name(state.name + ".lock")
+            lock.write_text(f"{os.getpid()}:existing\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "another GigiLoop Remote controller"):
+                with remote.controller_lock(state):
+                    pass
+
+    def test_stale_controller_lock_is_recovered(self):
+        with tempfile.TemporaryDirectory() as td:
+            state = Path(td) / "state.json"
+            lock = state.with_name(state.name + ".lock")
+            lock.write_text("not-a-pid:stale\n", encoding="utf-8")
+            with remote.controller_lock(state):
+                self.assertTrue(lock.exists())
+            self.assertFalse(lock.exists())
+
+    def test_claim_is_persisted_before_network_status_or_agent_execution(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); cfg = self.config(root); state = remote.default_state()
+            issue = {"number": 7, "author": {"login": "CultureDigitali"}, "body": json.dumps(self.envelope())}
+            old_origin, old_comment = remote.git_origin, remote.comment
+            remote.git_origin = lambda _root: "https://github.com/CultureDigitali/gigipec.git"
+            def fail_after_claim(*_args, **_kwargs):
+                raise RuntimeError("simulated crash after durable claim")
+            remote.comment = fail_after_claim
+            try:
+                with self.assertRaisesRegex(RuntimeError, "simulated crash"):
+                    remote.process(cfg, state, issue)
+            finally:
+                remote.git_origin, remote.comment = old_origin, old_comment
+            persisted = remote.load_state(Path(cfg["state_file"]))
+            self.assertEqual(persisted["processed"]["cmd-12345678"]["status"], "claimed")
+            self.assertEqual(persisted["processed"]["cmd-12345678"]["issue_number"], 7)
 
     def test_state_roundtrip(self):
         with tempfile.TemporaryDirectory() as td:
