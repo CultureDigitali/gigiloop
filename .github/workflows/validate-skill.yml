@@ -45,11 +45,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile runtime
-        run: python -m py_compile gigiloop/scripts/gigiloop.py
+      - name: Compile runtimes
+        run: python -m py_compile gigiloop/scripts/gigiloop.py gigiloop/scripts/coordination.py
 
       - name: Runtime self-test
         run: python gigiloop/scripts/gigiloop.py self-test
+
+      - name: Coordination self-test
+        run: python gigiloop/scripts/coordination.py self-test
 
       - name: Runtime regression suite
         run: python -m unittest discover -s tests -v
