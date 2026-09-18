@@ -4,6 +4,17 @@ All notable changes to GigiLoop are documented here.
 
 ## [Unreleased]
 
+### Added
+- Optional provider-neutral `coordination.py` runtime with stable worker identity, reusable sleeping workers, active-worker limits, and persistent host session references.
+- Durable inbox with immediate/after-turn priorities, idempotent dedupe keys, leases, replayable receipts, expiry recovery, and atomic acknowledge/next-claim behavior.
+- Worker finish boundary that prevents a worker from disappearing while owning an unacknowledged message and can atomically continue with queued follow-up work.
+- Structured compact/context-reset handoffs preserving the GigiLoop run identity, checkpoint generation, repository fingerprint, worker snapshot, pending message IDs, summary, and next action.
+- Coordination regression suite, self-test, CI compile/self-test coverage, and a dedicated coordination reference guide.
+
+### Changed
+- Skill and orchestration guidance now prefers sleeping/reusing compatible workers over needless recreation when the host supports persistent sessions.
+- Verification state and orchestration state are explicitly separated: receipts prove delivery ownership, never code correctness.
+
 ## v0.5.0
 
 ### Added
