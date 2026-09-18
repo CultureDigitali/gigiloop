@@ -194,3 +194,20 @@ Never turn a runtime error into a success claim. Fix the runtime/configuration p
 - `.gigiloop/coordination.json` stores worker identity, session references, leased inbox delivery, receipts, and context handoffs.
 
 Initialize coordination only after the main checkpoint exists. The coordination file is bound to the checkpoint `run_id`; a run mismatch is rejected instead of silently inheriting stale workers. See `references/coordination.md` for lifecycle and recovery semantics.
+
+
+## Remote command companion
+
+`scripts/remote.py` is an optional control-plane companion for starting or resuming locally configured agent hosts from a trusted remote client.
+
+The transport is intentionally narrower than the local supervisor:
+
+- GitHub Issues is used as a durable command journal;
+- only `run` and `resume` are accepted;
+- issue authors and project targets are allowlisted locally;
+- project filesystem paths and agent argv are never supplied remotely;
+- subprocesses run with `shell=False`;
+- command IDs are persisted for idempotency;
+- final status is reconciled from `.gigiloop/checkpoint.json`.
+
+This layer does not grant new permissions and does not bypass approval, quota, sandbox, branch, or verification rules. See `references/remote.md`.

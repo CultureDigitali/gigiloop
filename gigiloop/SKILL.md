@@ -83,6 +83,18 @@ Use it to preserve stable worker IDs, reuse sleeping workers, queue follow-up wo
 
 Do not treat a message receipt as verification evidence. Code/test evidence remains in the main checkpoint. Read `references/coordination.md` before integrating host workers or persistent sessions.
 
+### Optional remote command layer
+
+When a trusted mobile or remote client must start or resume work on a workstation, use the GitHub-Issues-backed remote layer:
+
+```bash
+python <skill-path>/scripts/remote.py daemon --config ~/.config/gigiloop/remote.json
+```
+
+Remote input is a strict declarative envelope. Never add a generic remote shell command: executable argv, project paths, repository pins, and allowed actors stay in local configuration. A remote command may start/resume a GigiLoop run, but completion still depends on current checkpoint evidence and the normal final gate.
+
+Read `references/remote.md` before enabling remote control.
+
 ## Choose an operating profile
 
 Select the profile from user instructions and risk. Record it. Never silently downgrade it.
@@ -318,3 +330,4 @@ Do not expose hidden chain-of-thought. Report actions, evidence, scores, blocker
 - `references/runtime.md` — deterministic runtime, heartbeat, supervision, CI fallback, recovery.
 - `references/orchestration.md` — Builder/Verifier/Red Team/Judge/Improver role protocol.
 - `references/coordination.md` — durable worker identity, leased inbox, finish boundary, sleeping reuse, and compact handoff protocol.
+- `references/remote.md` — secure remote/mobile command transport, allowlists, idempotency, and local execution boundary.

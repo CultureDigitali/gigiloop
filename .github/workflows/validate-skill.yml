@@ -46,7 +46,7 @@ jobs:
           python-version: '3.12'
 
       - name: Compile runtimes
-        run: python -m py_compile gigiloop/scripts/gigiloop.py gigiloop/scripts/coordination.py
+        run: python -m py_compile gigiloop/scripts/gigiloop.py gigiloop/scripts/coordination.py gigiloop/scripts/remote.py
 
       - name: Runtime self-test
         run: python gigiloop/scripts/gigiloop.py self-test

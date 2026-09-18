@@ -5,6 +5,10 @@ All notable changes to GigiLoop are documented here.
 ## [Unreleased]
 
 ### Added
+- Secure provider-neutral `remote.py` control plane using labeled GitHub Issues as a durable command journal for mobile/remote `run` and `resume` requests.
+- Remote safety controls: strict command schema, local actor/project allowlists, optional Git-origin pinning, bounded iterations, idempotent command IDs, local-only agent argv, and `shell=False` execution.
+- Remote regression tests covering shell-injection payloads, author/target rejection, idempotency, repository pinning, fenced JSON parsing, bounds, and state persistence.
+- Dedicated `remote.md` operational/security guide for GitHub mobile, Telegram, dashboards, and other frontends.
 - Optional provider-neutral `coordination.py` runtime with stable worker identity, reusable sleeping workers, active-worker limits, and persistent host session references.
 - Durable inbox with immediate/after-turn priorities, idempotent dedupe keys, leases, replayable receipts, expiry recovery, and atomic acknowledge/next-claim behavior.
 - Worker finish boundary that prevents a worker from disappearing while owning an unacknowledged message and can atomically continue with queued follow-up work.
