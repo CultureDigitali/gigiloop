@@ -571,9 +571,11 @@ def cmd_finish(a) -> int:
 
 def cmd_handoff(a) -> int:
     root = root_of(a.root)
-    checkpoint = read_checkpoint(root)
     outcome: dict = {}
     def mutate(data):
+        checkpoint = read_checkpoint(root)
+        if checkpoint['run_id'] != data['run_id']:
+            raise ValueError('checkpoint run changed before handoff')
         expire_claims(data)
         current_generation = int(data.get('context_generation', 1))
         data['context_generation'] = current_generation + 1
