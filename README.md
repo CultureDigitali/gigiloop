@@ -192,6 +192,39 @@ See [`gigiloop/references/coordination.md`](gigiloop/references/coordination.md)
 
 ---
 
+## Remote control from mobile
+
+GigiLoop can now accept bounded `run` / `resume` commands from a trusted phone or remote client while the coding agent continues on the Mac/workstation.
+
+```text
+GitHub mobile / Telegram / dashboard
+              │
+              ▼
+   labeled GitHub Issue command
+              │
+              ▼
+        remote.py daemon
+              │
+       local allowlist + repo pin
+              │
+              ▼
+   Codex / OpenCode / other host
+              │
+              ▼
+      GigiLoop final gate
+```
+
+The phone never supplies shell commands or local paths. The workstation keeps the executable argv, repository locations and actor allowlist in a private local config. Commands are idempotent and completion comes from the GigiLoop checkpoint.
+
+```bash
+python <skill-path>/scripts/remote.py validate-config --config ~/.config/gigiloop/remote.json
+python <skill-path>/scripts/remote.py daemon --config ~/.config/gigiloop/remote.json
+```
+
+See [`gigiloop/references/remote.md`](gigiloop/references/remote.md).
+
+---
+
 ## GitHub Actions minutes exhausted? Keep working.
 
 GigiLoop v0.4 explicitly treats hosted CI as **evidence**, not the persistence layer.
