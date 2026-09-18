@@ -292,10 +292,11 @@ def validate_repo(root: Path, skip_assets: bool = False) -> list[str]:
     required = ['gigiloop/SKILL.md', 'gigiloop/agents/openai.yaml', 'gigiloop/scripts/gigiloop.py',
         'gigiloop/references/scoring.md', 'gigiloop/references/checkpoint.md', 'gigiloop/references/verification.md',
         'gigiloop/references/integrity.md', 'gigiloop/references/reporting.md', 'gigiloop/references/hosts.md',
-        'gigiloop/references/runtime.md', 'gigiloop/references/orchestration.md', 'COMPATIBILITY.md', 'README.md',
-        'CHANGELOG.md', 'assets/visual-manifest.json', 'assets/BRANDING.md', 'adapters/codex/AGENTS.md',
+        'gigiloop/references/runtime.md', 'gigiloop/references/orchestration.md', 'gigiloop/references/coordination.md',
+        'gigiloop/scripts/coordination.py', 'COMPATIBILITY.md', 'README.md', 'CHANGELOG.md',
+        'assets/visual-manifest.json', 'assets/BRANDING.md', 'adapters/codex/AGENTS.md',
         'adapters/gemini-cli/GEMINI.md', '.cursor/rules/gigiloop.mdc', '.github/workflows/validate-skill.yml',
-        'tests/test_runtime.py']
+        'tests/test_runtime.py', 'tests/test_coordination.py']
     if not skip_assets:
         required += ['assets/gigiloop-logo.jpg', 'assets/gigiloop-superbanner.jpg', 'assets/gigiloop-compatibility.jpg', 'gigiloop/assets/gigiloop-logo.jpg']
     for rel in required:
@@ -311,7 +312,7 @@ def validate_repo(root: Path, skip_assets: bool = False) -> list[str]:
             dm = re.search(r'^description:\s+(.+)$', fm, re.M)
             if not dm or len(dm.group(1).strip()) > 1024: errors.append('invalid skill description')
         if len(text.splitlines()) > 500: errors.append('SKILL.md exceeds 500 lines')
-        for ref in ['scoring.md','checkpoint.md','verification.md','integrity.md','reporting.md','hosts.md','runtime.md','orchestration.md']:
+        for ref in ['scoring.md','checkpoint.md','verification.md','integrity.md','reporting.md','hosts.md','runtime.md','orchestration.md','coordination.md']:
             if f'references/{ref}' not in text: errors.append(f'SKILL.md missing reference {ref}')
         if 'scripts/gigiloop.py' not in text: errors.append('SKILL.md missing runtime reference')
     metadata = root / 'gigiloop/agents/openai.yaml'
@@ -322,7 +323,7 @@ def validate_repo(root: Path, skip_assets: bool = False) -> list[str]:
     wf = root / '.github/workflows/validate-skill.yml'
     if wf.exists():
         txt = wf.read_text(encoding='utf-8')
-        for cmd in ['python -m unittest discover -s tests -v','python gigiloop/scripts/gigiloop.py self-test','python gigiloop/scripts/gigiloop.py validate-repo','python gigiloop/scripts/gigiloop.py pack']:
+        for cmd in ['python -m unittest discover -s tests -v','python gigiloop/scripts/gigiloop.py self-test','python gigiloop/scripts/coordination.py self-test','python gigiloop/scripts/gigiloop.py validate-repo','python gigiloop/scripts/gigiloop.py pack']:
             if cmd not in txt: errors.append(f'workflow missing: {cmd}')
     if not skip_assets and (root/'assets/visual-manifest.json').exists():
         expected = {
