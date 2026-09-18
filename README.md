@@ -167,6 +167,31 @@ See [`gigiloop/references/runtime.md`](gigiloop/references/runtime.md).
 
 ---
 
+## Durable workers and compact handoff
+
+For hosts that expose subagents or persistent sessions, GigiLoop includes an optional standard-library coordination runtime:
+
+```text
+gigiloop/scripts/coordination.py
+```
+
+It adds stable worker IDs, reusable sleeping workers, a durable leased inbox with delivery receipts, an atomic finish boundary, and structured context handoffs. The state lives in `.gigiloop/coordination.json` and is bound to the main checkpoint `run_id`.
+
+```bash
+python <skill-path>/scripts/coordination.py init --root . --max-active-workers 2
+python <skill-path>/scripts/coordination.py worker-start --root . --id builder-1 --role builder --session-ref "<host-session-id>"
+python <skill-path>/scripts/coordination.py send --root . --target builder-1 --message "fix timeout propagation" --dedupe-key timeout-fix
+python <skill-path>/scripts/coordination.py claim --root . --id builder-1
+python <skill-path>/scripts/coordination.py finish --root . --id builder-1 --receipt "<receipt>" --result "timeout fix complete"
+python <skill-path>/scripts/coordination.py handoff --root . --reason compact --summary "implementation complete" --next-action "run verifier"
+```
+
+The coordination layer is provider-neutral: it does **not** automate ChatGPT or any other provider UI. A host adapter maps its own subagent/session identifiers to GigiLoop worker records. Message delivery is orchestration state, not verification evidence; the normal verification/fingerprint contract remains authoritative.
+
+See [`gigiloop/references/coordination.md`](gigiloop/references/coordination.md).
+
+---
+
 ## GitHub Actions minutes exhausted? Keep working.
 
 GigiLoop v0.4 explicitly treats hosted CI as **evidence**, not the persistence layer.
