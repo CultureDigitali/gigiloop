@@ -7,6 +7,7 @@ agent commands are defined locally and subprocesses always run with shell=False.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
 import os
@@ -171,6 +172,58 @@ def load_state(path: Path) -> dict:
     return data
 
 
+def pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+
+
+@contextmanager
+def controller_lock(state_path: Path):
+    lock = state_path.expanduser().resolve().with_name(state_path.name + ".lock")
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    token = f"{os.getpid()}:{uuid.uuid4()}"
+    for _attempt in range(2):
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(token + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            break
+        except FileExistsError:
+            try:
+                existing = lock.read_text(encoding="utf-8").strip()
+                pid_text = existing.split(":", 1)[0]
+                existing_pid = int(pid_text)
+            except (OSError, ValueError):
+                existing_pid = -1
+            if pid_alive(existing_pid):
+                raise RuntimeError(f"another GigiLoop Remote controller is active (pid={existing_pid})")
+            try:
+                lock.unlink()
+            except FileNotFoundError:
+                pass
+    else:
+        raise RuntimeError(f"unable to acquire remote controller lock: {lock}")
+    try:
+        yield
+    finally:
+        try:
+            if lock.read_text(encoding="utf-8").strip() == token:
+                lock.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def run(argv: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(argv, cwd=str(cwd) if cwd else None, text=True, stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, errors="surrogateescape", shell=False)
@@ -183,13 +236,29 @@ def git_origin(root: Path) -> str | None:
     return proc.stdout.strip() if proc.returncode == 0 else None
 
 
+def canonical_github_repo(origin: str | None) -> str | None:
+    if not origin:
+        return None
+    value = origin.strip()
+    prefixes = (
+        "git@github.com:",
+        "ssh://git@github.com/",
+        "https://github.com/",
+    )
+    for prefix in prefixes:
+        if value.startswith(prefix):
+            path = value[len(prefix):].removesuffix(".git").strip("/")
+            parts = path.split("/")
+            if len(parts) == 2 and all(re.fullmatch(r"[A-Za-z0-9_.-]+", part) for part in parts):
+                return "/".join(parts)
+            return None
+    return None
+
+
 def repo_matches(origin: str | None, expected: str | None) -> bool:
     if not expected:
         return True
-    if not origin:
-        return False
-    value = origin.removesuffix(".git").replace("git@github.com:", "https://github.com/")
-    return value.rstrip("/").endswith("/" + expected)
+    return canonical_github_repo(origin) == expected
 
 
 def checkpoint(root: Path) -> dict | None:
@@ -308,6 +377,16 @@ def process(config: dict, state: dict, issue: dict) -> tuple[str, str, dict | No
     if not repo_matches(git_origin(root), project.get("expected_repo")):
         return "rejected", "git origin does not match configured repository", env
 
+    state["processed"][env["command_id"]] = {
+        "status": "claimed",
+        "target": env["target"],
+        "issue_number": number,
+        "updated_at": now(),
+        "detail": "durably claimed before local execution",
+    }
+    state["updated_at"] = now()
+    atomic_write(Path(config["state_file"]), state)
+
     comment(config["control_repo"], number, status_message("ACCEPTED", env))
     ok, detail = prepare(config, project, env)
     if not ok:
@@ -339,25 +418,26 @@ def process(config: dict, state: dict, issue: dict) -> tuple[str, str, dict | No
 
 def once(config: dict) -> dict:
     state_path = Path(config["state_file"])
-    state = load_state(state_path)
-    report = {"seen": 0, "processed": 0, "results": []}
-    for issue in sorted(issues(config["control_repo"]), key=lambda x: x.get("number", 0)):
-        report["seen"] += 1
-        result, detail, env = process(config, state, issue)
-        if result != "duplicate":
-            report["processed"] += 1
-        report["results"].append({"issue": issue.get("number"), "status": result})
-        atomic_write(state_path, state)
-        number = issue.get("number")
-        if isinstance(number, int) and result != "duplicate":
-            if env is None:
-                env = {"command_id": f"invalid-{number}", "target": "unknown", "action": "unknown", "profile": "unknown"}
-            comment(config["control_repo"], number, status_message(result.upper(), env, detail))
-            if result in TERMINAL | {"rejected", "failed"}:
-                close(config["control_repo"], number)
-    if not state_path.exists():
-        atomic_write(state_path, state)
-    return report
+    with controller_lock(state_path):
+        state = load_state(state_path)
+        report = {"seen": 0, "processed": 0, "results": []}
+        for issue in sorted(issues(config["control_repo"]), key=lambda x: x.get("number", 0)):
+            report["seen"] += 1
+            result, detail, env = process(config, state, issue)
+            if result != "duplicate":
+                report["processed"] += 1
+            report["results"].append({"issue": issue.get("number"), "status": result})
+            atomic_write(state_path, state)
+            number = issue.get("number")
+            if isinstance(number, int) and result != "duplicate":
+                if env is None:
+                    env = {"command_id": f"invalid-{number}", "target": "unknown", "action": "unknown", "profile": "unknown"}
+                comment(config["control_repo"], number, status_message(result.upper(), env, detail))
+                if result in TERMINAL | {"rejected", "failed"}:
+                    close(config["control_repo"], number)
+        if not state_path.exists():
+            atomic_write(state_path, state)
+        return report
 
 
 def cmd_validate_envelope(a) -> int:
