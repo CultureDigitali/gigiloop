@@ -185,3 +185,12 @@ Treat runtime outputs as operational signals:
 - supervisor restart-budget or wall-clock exhaustion — stop and report `BUDGET EXHAUSTED` unless a stronger blocker applies.
 
 Never turn a runtime error into a success claim. Fix the runtime/configuration problem or document the exact limitation.
+
+## Durable coordination companion
+
+`scripts/coordination.py` is an optional companion runtime for host-neutral worker/session orchestration. It deliberately keeps coordination state separate from verification evidence:
+
+- `.gigiloop/checkpoint.json` remains authoritative for goal, repository fingerprint, evidence, findings, iteration, and completion status;
+- `.gigiloop/coordination.json` stores worker identity, session references, leased inbox delivery, receipts, and context handoffs.
+
+Initialize coordination only after the main checkpoint exists. The coordination file is bound to the checkpoint `run_id`; a run mismatch is rejected instead of silently inheriting stale workers. See `references/coordination.md` for lifecycle and recovery semantics.
