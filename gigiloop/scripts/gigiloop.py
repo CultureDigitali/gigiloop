@@ -293,10 +293,11 @@ def validate_repo(root: Path, skip_assets: bool = False) -> list[str]:
         'gigiloop/references/scoring.md', 'gigiloop/references/checkpoint.md', 'gigiloop/references/verification.md',
         'gigiloop/references/integrity.md', 'gigiloop/references/reporting.md', 'gigiloop/references/hosts.md',
         'gigiloop/references/runtime.md', 'gigiloop/references/orchestration.md', 'gigiloop/references/coordination.md',
-        'gigiloop/scripts/coordination.py', 'COMPATIBILITY.md', 'README.md', 'CHANGELOG.md',
+        'gigiloop/references/remote.md', 'gigiloop/scripts/coordination.py', 'gigiloop/scripts/remote.py',
+        'COMPATIBILITY.md', 'README.md', 'CHANGELOG.md',
         'assets/visual-manifest.json', 'assets/BRANDING.md', 'adapters/codex/AGENTS.md',
         'adapters/gemini-cli/GEMINI.md', '.cursor/rules/gigiloop.mdc', '.github/workflows/validate-skill.yml',
-        'tests/test_runtime.py', 'tests/test_coordination.py']
+        'tests/test_runtime.py', 'tests/test_coordination.py', 'tests/test_remote.py']
     if not skip_assets:
         required += ['assets/gigiloop-logo.jpg', 'assets/gigiloop-superbanner.jpg', 'assets/gigiloop-compatibility.jpg', 'gigiloop/assets/gigiloop-logo.jpg']
     for rel in required:
@@ -312,7 +313,7 @@ def validate_repo(root: Path, skip_assets: bool = False) -> list[str]:
             dm = re.search(r'^description:\s+(.+)$', fm, re.M)
             if not dm or len(dm.group(1).strip()) > 1024: errors.append('invalid skill description')
         if len(text.splitlines()) > 500: errors.append('SKILL.md exceeds 500 lines')
-        for ref in ['scoring.md','checkpoint.md','verification.md','integrity.md','reporting.md','hosts.md','runtime.md','orchestration.md','coordination.md']:
+        for ref in ['scoring.md','checkpoint.md','verification.md','integrity.md','reporting.md','hosts.md','runtime.md','orchestration.md','coordination.md','remote.md']:
             if f'references/{ref}' not in text: errors.append(f'SKILL.md missing reference {ref}')
         if 'scripts/gigiloop.py' not in text: errors.append('SKILL.md missing runtime reference')
     metadata = root / 'gigiloop/agents/openai.yaml'
