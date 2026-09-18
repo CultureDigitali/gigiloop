@@ -137,3 +137,14 @@ No single role can declare success.
 - Judge: every critical criterion clears its threshold after reconciliation;
 - integrity gate: no unexplained verifier weakening or protected-work conflict;
 - final gate: repository state and evidence are current.
+
+
+## Durable worker lifecycle
+
+When a host can preserve subagent or session identity, prefer a stable worker ID per logical role instance. A worker that has completed its current turn should normally become `sleeping`, not be destroyed. Revive that worker for related follow-up work before creating another equivalent worker, subject to the host's context-quality constraints.
+
+Use the coordination runtime's leased inbox when work must survive crashes or context replacement. A worker finish boundary must either acknowledge its current receipt or explicitly requeue ownership; it must not report completion while an owned message is ambiguous. If another queued message exists, `finish` may atomically claim it and keep the worker active.
+
+Context compaction is a handoff, not a new project. Preserve the GigiLoop run ID and write a structured handoff containing the observable summary, next action, worker snapshot, and pending message IDs. Hidden chain-of-thought is never part of the handoff.
+
+See `references/coordination.md` for the executable protocol.
