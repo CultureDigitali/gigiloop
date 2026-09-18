@@ -127,6 +127,31 @@ class CoordinationTests(unittest.TestCase):
             self.assertEqual(handoff['worker_snapshot']['w1']['session_ref'], 'session-1')
             self.assertEqual(handoff['pending_message_ids'], [state['inbox'][0]['id']])
 
+    def test_permanent_finish_rejects_orphaning_targeted_messages(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); make_root(root); start_worker(root); send(root, target='w1', message='still pending')
+            args = SimpleNamespace(root=str(root), worker_id='w1', result='done', receipt=None,
+                                   lease_seconds=300, permanent=True)
+            with self.assertRaisesRegex(ValueError, 'queued targeted messages'):
+                coord.cmd_finish(args)
+            state = coord.load(root)
+            self.assertEqual(state['workers']['w1']['status'], 'working')
+            self.assertEqual(state['inbox'][0]['status'], 'queued')
+
+    def test_update_rejects_checkpoint_run_change_mid_mutation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); make_root(root)
+            def mutate(data):
+                checkpoint = json.loads((root / coord.CHECKPOINT).read_text(encoding='utf-8'))
+                checkpoint['run_id'] = 'run-2'
+                coord.atomic_write(root / coord.CHECKPOINT, checkpoint)
+                data['sequence'] = 99
+            with self.assertRaisesRegex(ValueError, 'checkpoint run changed'):
+                coord.update(root, mutate)
+            raw = json.loads((root / coord.STATE).read_text(encoding='utf-8'))
+            self.assertEqual(raw['run_id'], 'run-1')
+            self.assertEqual(raw['sequence'], 0)
+
     def test_coordination_refuses_checkpoint_from_another_run(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); make_root(root)
