@@ -209,7 +209,10 @@ def update(root: Path, mutator) -> dict:
     with coordination_lock(root):
         data = load(root)
         mutator(data)
-        data['checkpoint_generation'] = read_checkpoint(root).get('generation', data.get('checkpoint_generation', 1))
+        checkpoint = read_checkpoint(root)
+        if checkpoint['run_id'] != data['run_id']:
+            raise ValueError('checkpoint run changed during coordination update; retry against the new run')
+        data['checkpoint_generation'] = checkpoint.get('generation', data.get('checkpoint_generation', 1))
         data['updated_at'] = now()
         validate_state(data)
         atomic_write(root / STATE, data)
@@ -541,6 +544,9 @@ def cmd_finish(a) -> int:
         worker['turns_completed'] = int(worker.get('turns_completed', 0)) + 1
         worker['updated_at'] = now()
         if a.permanent:
+            targeted_pending = [item for item in data['inbox'] if item.get('status') == 'queued' and item.get('target') == a.worker_id]
+            if targeted_pending:
+                raise ValueError('cannot permanently finish worker with queued targeted messages')
             worker['status'] = 'finished'
             worker['finished_at'] = now()
             append_event(data, 'worker_finished', worker_id=a.worker_id, permanent=True)
