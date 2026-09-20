@@ -1,0 +1,39 @@
+name: Temporary Rust Toolchain Bridge
+
+on:
+  push:
+    branches:
+      - "tmp/rust-toolchain-bridge"
+
+jobs:
+  package-rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Prepare stable Rust toolchain
+        shell: bash
+        run: |
+          set -euxo pipefail
+          rustup set profile minimal
+          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+          rustup default stable
+          RUSTC_PATH="$(rustup which rustc)"
+          TOOLCHAIN_ROOT="$(dirname "$(dirname "$RUSTC_PATH")")"
+          TOOLCHAIN_NAME="$(basename "$TOOLCHAIN_ROOT")"
+          rustc --version
+          cargo --version
+          rustfmt --version
+          cargo clippy --version
+          tar -C "$(dirname "$TOOLCHAIN_ROOT")" -czf /tmp/rust-toolchain.tar.gz "$TOOLCHAIN_NAME"
+          printf '%s\n' "$TOOLCHAIN_NAME" > /tmp/toolchain-name.txt
+          ls -lh /tmp/rust-toolchain.tar.gz
+
+      - name: Upload Rust toolchain artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-toolchain-linux-x86_64
+          path: |
+            /tmp/rust-toolchain.tar.gz
+            /tmp/toolchain-name.txt
+          compression-level: 0
+          retention-days: 1
