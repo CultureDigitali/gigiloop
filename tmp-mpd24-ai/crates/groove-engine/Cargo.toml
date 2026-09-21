@@ -1,0 +1,9 @@
+[package]
+name = "mpd24-ai-groove-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpd24-ai-sequencer = { path = "../sequencer" }
+serde.workspace = true

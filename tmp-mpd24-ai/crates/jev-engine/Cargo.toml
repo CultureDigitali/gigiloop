@@ -1,0 +1,13 @@
+[package]
+name = "mpd24-ai-jev-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpd24-ai-groove-engine = { path = "../groove-engine" }
+mpd24-ai-sequencer = { path = "../sequencer" }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

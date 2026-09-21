@@ -1,0 +1,16 @@
+[package]
+name = "mpd24-ai-project-store"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+mpd24-ai-groove-engine = { path = "../groove-engine" }
+mpd24-ai-sequencer = { path = "../sequencer" }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,10 @@
+{
+  "name": "mpd24-ai",
+  "private": true,
+  "workspaces": ["apps/desktop"],
+  "scripts": {
+    "dev": "npm --workspace apps/desktop run dev",
+    "build": "npm --workspace apps/desktop run build",
+    "tauri": "npm --workspace apps/desktop run tauri"
+  }
+}

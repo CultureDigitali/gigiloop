@@ -1,0 +1,21 @@
+[package]
+name = "mpd24-ai-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+mpd24-ai-audio-engine = { path = "../../../crates/audio-engine" }
+mpd24-ai-common = { path = "../../../crates/common" }
+mpd24-ai-groove-engine = { path = "../../../crates/groove-engine" }
+mpd24-ai-jev-engine = { path = "../../../crates/jev-engine" }
+mpd24-ai-midi-engine = { path = "../../../crates/midi-engine" }
+mpd24-ai-project-store = { path = "../../../crates/project-store" }
+mpd24-ai-sequencer = { path = "../../../crates/sequencer" }
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
