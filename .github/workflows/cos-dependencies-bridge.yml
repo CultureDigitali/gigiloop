@@ -1,0 +1,41 @@
+name: Temporary Chat On Steroids Dependencies Bridge
+
+on:
+  push:
+    branches:
+      - "tmp/cos-source-bridge"
+
+jobs:
+  package-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout official source
+        uses: actions/checkout@v4
+        with:
+          repository: totec448-spec/chat-on-steroids
+          ref: main
+          path: source
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install dependencies
+        working-directory: source
+        run: npm ci --no-audit --no-fund
+
+      - name: Package dependencies
+        run: tar -C source -czf chat-on-steroids-node-modules-linux-x64.tar.gz node_modules
+
+      - name: Upload dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-on-steroids-node-modules-linux-x64
+          path: chat-on-steroids-node-modules-linux-x64.tar.gz
+          compression-level: 0
+          retention-days: 1
