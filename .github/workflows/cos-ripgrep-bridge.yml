@@ -1,0 +1,40 @@
+name: Temporary Chat On Steroids Ripgrep Bridge
+
+on:
+  push:
+    branches:
+      - "tmp/cos-source-bridge"
+
+jobs:
+  package-ripgrep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout official source
+        uses: actions/checkout@v4
+        with:
+          repository: totec448-spec/chat-on-steroids
+          ref: main
+          path: source
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Fetch pinned ripgrep
+        working-directory: source
+        run: node scripts/fetch-ripgrep.mjs
+
+      - name: Package ripgrep
+        run: |
+          tar -C source -czf chat-on-steroids-ripgrep-linux-x64.tar.gz             resources/rg             resources/packaging/rg/linux/x64             node_modules/.cache/ripgrep
+
+      - name: Upload ripgrep
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-on-steroids-ripgrep-linux-x64
+          path: chat-on-steroids-ripgrep-linux-x64.tar.gz
+          compression-level: 0
+          retention-days: 1
